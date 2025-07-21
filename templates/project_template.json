@@ -1,0 +1,380 @@
+{
+  "name": "Standard Project Template",
+  "description": "A comprehensive template for standard software development projects",
+  "project_type": "web",
+  "technology_stack": ["Python", "JavaScript", "HTML", "CSS", "PostgreSQL"],
+  "phases": [
+    {
+      "name": "Requirements Analysis",
+      "description": "Gather and analyze project requirements",
+      "duration_weeks": 1,
+      "deliverables": [
+        "Requirements Document",
+        "User Stories",
+        "Acceptance Criteria",
+        "Stakeholder Analysis"
+      ],
+      "tasks": [
+        "Conduct stakeholder interviews",
+        "Document functional requirements",
+        "Create user stories with acceptance criteria",
+        "Identify non-functional requirements",
+        "Validate requirements with stakeholders"
+      ]
+    },
+    {
+      "name": "System Design",
+      "description": "Design system architecture and components",
+      "duration_weeks": 2,
+      "deliverables": [
+        "Architecture Document",
+        "Database Design",
+        "API Specification",
+        "UI/UX Wireframes"
+      ],
+      "tasks": [
+        "Design system architecture",
+        "Create database schema",
+        "Design API endpoints",
+        "Create UI/UX wireframes",
+        "Review and approve designs"
+      ]
+    },
+    {
+      "name": "Development",
+      "description": "Implementation of the system",
+      "duration_weeks": 6,
+      "deliverables": [
+        "Working Software",
+        "Unit Tests",
+        "Code Documentation",
+        "API Implementation"
+      ],
+      "tasks": [
+        "Set up development environment",
+        "Implement core functionality",
+        "Develop user interface",
+        "Create API endpoints",
+        "Write unit tests",
+        "Code review and integration"
+      ]
+    },
+    {
+      "name": "Testing",
+      "description": "Comprehensive testing of the system",
+      "duration_weeks": 2,
+      "deliverables": [
+        "Test Results",
+        "Bug Reports",
+        "Performance Reports",
+        "Security Assessment"
+      ],
+      "tasks": [
+        "Execute integration tests",
+        "Perform system testing",
+        "Conduct performance testing",
+        "Run security tests",
+        "User acceptance testing"
+      ]
+    },
+    {
+      "name": "Deployment",
+      "description": "Deploy system to production",
+      "duration_weeks": 1,
+      "deliverables": [
+        "Production System",
+        "Deployment Guide",
+        "Monitoring Setup",
+        "User Documentation"
+      ],
+      "tasks": [
+        "Set up production environment",
+        "Configure deployment pipeline",
+        "Deploy to production",
+        "Configure monitoring",
+        "Validate deployment"
+      ]
+    }
+  ],
+  "directory_structure": {
+    "src/": "Source code directory",
+    "src/components/": "Reusable components",
+    "src/pages/": "Page components",
+    "src/utils/": "Utility functions",
+    "src/styles/": "CSS/styling files",
+    "src/api/": "API integration code",
+    "tests/": "Test files directory",
+    "tests/unit/": "Unit test files",
+    "tests/integration/": "Integration test files",
+    "tests/e2e/": "End-to-end test files",
+    "docs/": "Documentation directory",
+    "docs/api/": "API documentation",
+    "docs/user/": "User documentation",
+    "docs/technical/": "Technical documentation",
+    "config/": "Configuration files",
+    "scripts/": "Build and deployment scripts",
+    "assets/": "Static assets (images, fonts, etc.)",
+    "public/": "Public static files"
+  },
+  "required_files": [
+    "README.md",
+    "LICENSE",
+    ".gitignore",
+    "CHANGELOG.md",
+    "package.json",
+    "index.html",
+    "src/main.js",
+    "src/App.vue",
+    "src/router/index.js",
+    "src/store/index.js",
+    "tests/unit/example.spec.js",
+    "docs/README.md"
+  ],
+  "configuration": {
+    "environment": {
+      "development": {
+        "debug": true,
+        "log_level": "DEBUG",
+        "api_base_url": "http://localhost:8000"
+      },
+      "staging": {
+        "debug": false,
+        "log_level": "INFO",
+        "api_base_url": "https://staging-api.example.com"
+      },
+      "production": {
+        "debug": false,
+        "log_level": "ERROR",
+        "api_base_url": "https://api.example.com"
+      }
+    },
+    "security": {
+      "enable_cors": true,
+      "api_rate_limit": "100/hour",
+      "session_timeout": 3600,
+      "password_policy": {
+        "min_length": 8,
+        "require_special_chars": true,
+        "require_numbers": true
+      }
+    },
+    "database": {
+      "type": "postgresql",
+      "connection_pool_size": 10,
+      "timeout": 30,
+      "ssl_mode": "prefer"
+    },
+    "caching": {
+      "enabled": true,
+      "ttl": 3600,
+      "redis_url": "redis://localhost:6379"
+    }
+  },
+  "dependencies": {
+    "runtime": [
+      "vue@^3.0.0",
+      "vue-router@^4.0.0",
+      "vuex@^4.0.0",
+      "axios@^0.24.0",
+      "lodash@^4.17.0"
+    ],
+    "development": [
+      "webpack@^5.0.0",
+      "eslint@^8.0.0",
+      "jest@^27.0.0",
+      "cypress@^9.0.0",
+      "@vue/test-utils@^2.0.0"
+    ],
+    "backend": [
+      "fastapi@^0.70.0",
+      "uvicorn@^0.15.0",
+      "pydantic@^1.8.0",
+      "sqlalchemy@^1.4.0",
+      "alembic@^1.7.0"
+    ]
+  },
+  "scripts": {
+    "start": "npm run serve",
+    "build": "npm run build:prod",
+    "build:dev": "npm run build -- --mode development",
+    "build:prod": "npm run build -- --mode production",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "jest",
+    "test:e2e": "cypress run",
+    "lint": "eslint src/ --ext .js,.vue",
+    "lint:fix": "eslint src/ --ext .js,.vue --fix",
+    "docs": "vuepress dev docs",
+    "docs:build": "vuepress build docs"
+  },
+  "documentation": {
+    "sections": [
+      "Overview",
+      "Getting Started",
+      "Installation",
+      "Configuration",
+      "Usage",
+      "API Reference",
+      "Contributing",
+      "License"
+    ],
+    "formats": ["markdown", "html"],
+    "auto_generate": true,
+    "include_api_docs": true,
+    "include_user_guide": true
+  },
+  "quality_gates": {
+    "code_coverage": {
+      "minimum": 80,
+      "target": 90,
+      "exclude_files": ["*.spec.js", "*.test.js"]
+    },
+    "code_quality": {
+      "complexity_threshold": 10,
+      "duplication_threshold": 3,
+      "maintainability_index": 70
+    },
+    "security": {
+      "vulnerability_scan": true,
+      "dependency_check": true,
+      "static_analysis": true
+    },
+    "performance": {
+      "load_testing": true,
+      "response_time_threshold": "200ms",
+      "memory_usage_threshold": "512MB"
+    }
+  },
+  "ci_cd": {
+    "pipeline_stages": [
+      "build",
+      "test",
+      "security_scan",
+      "deploy_staging",
+      "integration_test",
+      "deploy_production"
+    ],
+    "triggers": [
+      "push_to_main",
+      "pull_request",
+      "scheduled_nightly"
+    ],
+    "environments": [
+      {
+        "name": "development",
+        "auto_deploy": true,
+        "approval_required": false
+      },
+      {
+        "name": "staging",
+        "auto_deploy": true,
+        "approval_required": false
+      },
+      {
+        "name": "production",
+        "auto_deploy": false,
+        "approval_required": true
+      }
+    ],
+    "deployment_strategy": "blue_green",
+    "rollback_enabled": true,
+    "monitoring": {
+      "health_checks": true,
+      "performance_monitoring": true,
+      "error_tracking": true
+    }
+  },
+  "team_roles": [
+    {
+      "role": "Project Manager",
+      "responsibilities": [
+        "Project planning and coordination",
+        "Stakeholder communication",
+        "Risk management",
+        "Progress tracking"
+      ]
+    },
+    {
+      "role": "Software Architect",
+      "responsibilities": [
+        "System design and architecture",
+        "Technology selection",
+        "Code review",
+        "Technical guidance"
+      ]
+    },
+    {
+      "role": "Frontend Developer",
+      "responsibilities": [
+        "UI/UX implementation",
+        "Frontend component development",
+        "Client-side optimization",
+        "Frontend testing"
+      ]
+    },
+    {
+      "role": "Backend Developer",
+      "responsibilities": [
+        "API development",
+        "Database design",
+        "Server-side logic",
+        "Backend testing"
+      ]
+    },
+    {
+      "role": "DevOps Engineer",
+      "responsibilities": [
+        "CI/CD pipeline setup",
+        "Infrastructure management",
+        "Deployment automation",
+        "Monitoring and logging"
+      ]
+    },
+    {
+      "role": "QA Engineer",
+      "responsibilities": [
+        "Test planning and execution",
+        "Bug reporting and tracking",
+        "Automation testing",
+        "Quality assurance"
+      ]
+    }
+  ],
+  "risk_management": {
+    "common_risks": [
+      {
+        "risk": "Scope creep",
+        "probability": "medium",
+        "impact": "high",
+        "mitigation": "Clear requirements documentation and change control process"
+      },
+      {
+        "risk": "Technical debt",
+        "probability": "high",
+        "impact": "medium",
+        "mitigation": "Regular code reviews and refactoring sprints"
+      },
+      {
+        "risk": "Resource availability",
+        "probability": "medium",
+        "impact": "high",
+        "mitigation": "Cross-training and backup resource planning"
+      },
+      {
+        "risk": "Integration issues",
+        "probability": "medium",
+        "impact": "medium",
+        "mitigation": "Early integration testing and API contract validation"
+      }
+    ]
+  },
+  "success_metrics": [
+    "On-time delivery within 5% variance",
+    "Budget adherence within 10% variance",
+    "Code quality score above 8/10",
+    "Test coverage above 80%",
+    "Zero critical security vulnerabilities",
+    "User satisfaction score above 4/5",
+    "Performance requirements met (response time < 200ms)",
+    "Successful deployment with minimal downtime"
+  ]
+}
