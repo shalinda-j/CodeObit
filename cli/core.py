@@ -67,6 +67,11 @@ class AISoftwareEngineerCLI:
         help_parser = subparsers.add_parser('help', help='Show detailed help')
         help_parser.add_argument('topic', nargs='?', help='Help topic')
         
+        # Add interactive mode
+        interactive_parser = subparsers.add_parser('interactive', help='Start interactive Gemini-style CLI')
+        interactive_parser.add_argument('--theme', choices=['auto', 'dark', 'light'], 
+                                      help='Color theme for interactive mode')
+        
         return parser
     
     def show_welcome(self):
@@ -87,6 +92,7 @@ class AISoftwareEngineerCLI:
         
         commands_info = {
             'init': 'Initialize the CLI with API key and configuration',
+            'interactive': 'Start interactive Gemini-style conversation mode',
             'requirements': 'Analyze and manage project requirements',
             'design': 'Generate system architecture and design documents',
             'code': 'AI-powered code generation and analysis',
@@ -141,6 +147,15 @@ class AISoftwareEngineerCLI:
         
         return True
     
+    def start_interactive_mode(self, args):
+        """Start interactive Gemini-style CLI mode"""
+        from cli.interactive import InteractiveCLI
+        
+        interactive_cli = InteractiveCLI()
+        if hasattr(args, 'theme') and args.theme:
+            interactive_cli.color_theme = args.theme
+        interactive_cli.start()
+    
     def show_help(self, topic=None):
         """Show detailed help information"""
         if topic and topic in self.commands:
@@ -167,6 +182,9 @@ class AISoftwareEngineerCLI:
         # Handle special commands
         if args.command == 'init':
             self.init_cli(args)
+            return
+        elif args.command == 'interactive':
+            self.start_interactive_mode(args)
             return
         elif args.command == 'help':
             self.show_help(args.topic if hasattr(args, 'topic') else None)

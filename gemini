@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+"""
+Gemini-style CLI launcher - Quick access to interactive mode
+Usage: ./gemini or python gemini
+"""
+
+import sys
+import os
+
+# Add current directory to path to import local modules
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
+
+from cli.interactive import InteractiveCLI
+
+def main():
+    """Main entry point for Gemini-style CLI"""
+    try:
+        interactive_cli = InteractiveCLI()
+        interactive_cli.start()
+    except KeyboardInterrupt:
+        print("\nGoodbye!")
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

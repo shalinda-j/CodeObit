@@ -8,6 +8,15 @@ This repository contains a comprehensive AI-powered CLI tool for software engine
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (January 2025)
+
+**Interactive Gemini-Style CLI Mode Added**
+- Added conversational AI interface similar to official Gemini CLI
+- Features include color themes, session history, intelligent request routing
+- Natural language processing with specialized AI roles for different tasks
+- Quick launcher script (`python gemini`) for easy access
+- Comprehensive README documentation with usage examples
+
 ## System Architecture
 
 ### Core Architecture
@@ -33,6 +42,15 @@ Preferred communication style: Simple, everyday language.
 - Argument parsing and command dispatch
 - Configuration management integration
 - Console initialization with Rich library
+- Interactive mode integration and launcher
+
+### 1a. Interactive Interface (`cli/interactive.py`)
+- Gemini-style conversational AI interface
+- Session history and context management
+- Intelligent request routing based on natural language
+- Color theme support (auto, dark, light)
+- Special commands (/help, /theme, /history, etc.)
+- Real-time AI processing with visual indicators
 
 ### 2. AI Integration (`cli/ai/`)
 - **GeminiClient**: Wrapper for Google Gemini API
