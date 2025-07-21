@@ -225,9 +225,9 @@ class AISoftwareEngineerCLI:
         """Main run method"""
         parser = self.create_parser()
         
-        # If no arguments provided, show welcome
+        # If no arguments provided, start interactive mode
         if len(sys.argv) == 1:
-            self.show_welcome()
+            self.start_interactive_mode(type('Args', (), {'theme': None})())
             return
         
         args = parser.parse_args()
