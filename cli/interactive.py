@@ -121,79 +121,175 @@ class InteractiveCLI:
             sys.exit(1)
     
     def main_loop(self):
-        """Main interactive loop"""
+        """Main interactive chat loop - stays open like Google CLI"""
         while True:
             try:
-                # Get user input
+                # Show chat prompt with project context
+                project_indicator = self.get_project_indicator()
+                
+                # Get user input with rich prompt
                 user_input = Prompt.ask(
-                    "[blue]>[/blue]",
-                    default=""
+                    f"[cyan]codeobit[/cyan] [dim]{project_indicator}[/dim] [blue]>[/blue]",
+                    console=self.console
                 ).strip()
                 
+                # Skip empty inputs
                 if not user_input:
                     continue
                 
-                # Handle special commands
+                # Handle special commands first
                 if user_input.startswith('/'):
-                    self.handle_command(user_input[1:])
+                    if self.handle_special_command(user_input):
+                        break  # Exit if /exit was called
                     continue
                 
-                # Process with AI
-                self.process_ai_request(user_input)
+                # Show typing indicator
+                with self.console.status("[bold green]codeobit is thinking...", spinner="dots"):
+                    # Add to session history
+                    self.session_history.append({
+                        'user': user_input,
+                        'timestamp': datetime.now().isoformat()
+                    })
+                    
+                    # Process with AI
+                    response = self.process_request(user_input)
+                    
+                    # Update token usage
+                    self.update_token_usage(user_input, response)
                 
+                # Display AI response with proper formatting
+                if response:
+                    self.display_ai_response(response)
+                    
+                    # Add response to history
+                    self.session_history[-1]['assistant'] = response
+                
+            except EOFError:
+                self.console.print("\n[yellow]Chat ended (Ctrl+D detected)[/yellow]")
+                break
             except KeyboardInterrupt:
-                if Confirm.ask("\n[yellow]Exit CLI?[/yellow]"):
-                    break
+                self.console.print("\n[yellow]Chat interrupted (Ctrl+C detected)[/yellow]")
+                break
             except Exception as e:
-                self.console.print(f"[red]Error: {e}[/red]")
+                self.console.print(f"[red]Error in chat: {str(e)}[/red]")
     
-    def handle_command(self, command: str):
-        """Handle special CLI commands"""
-        parts = command.split()
+    def get_project_indicator(self):
+        """Get current project indicator for prompt"""
+        # Try to get current project name
+        try:
+            import json
+            from pathlib import Path
+            project_file = Path("project_data.json")
+            if project_file.exists():
+                with open(project_file, 'r') as f:
+                    data = json.load(f)
+                    project_name = data.get('project_name', 'No project')
+                    return f"({project_name[:15]}...)" if len(project_name) > 15 else f"({project_name})"
+        except:
+            pass
+        return "(Ready)"
+    
+    def update_token_usage(self, user_input, response):
+        """Update token usage tracking"""
+        try:
+            import json
+            from pathlib import Path
+            
+            # Estimate token usage (rough approximation)
+            input_tokens = len(user_input.split()) * 1.3
+            output_tokens = len(response.split()) * 1.3
+            total_tokens = int(input_tokens + output_tokens)
+            
+            # Load or create project data
+            project_file = Path("project_data.json")
+            if project_file.exists():
+                with open(project_file, 'r') as f:
+                    data = json.load(f)
+            else:
+                data = {'project_name': 'Interactive Session', 'tokens_used': 0}
+            
+            data['tokens_used'] = data.get('tokens_used', 0) + total_tokens
+            
+            # Save updated data
+            with open(project_file, 'w') as f:
+                json.dump(data, f, indent=2)
+                
+        except Exception:
+            pass  # Fail silently for token tracking
+    
+    def display_ai_response(self, response):
+        """Display AI response with beautiful formatting"""
+        # Create response panel with codeobit branding
+        response_panel = Panel(
+            Markdown(response),
+            title="🤖 codeobit Assistant",
+            title_align="left",
+            border_style="green",
+            padding=(1, 2)
+        )
+        self.console.print(response_panel)
+    
+    def handle_special_command(self, command: str):
+        """Handle special slash commands"""
+        parts = command[1:].split()  # Remove the '/' prefix
+        if not parts:
+            return False
+            
         cmd = parts[0].lower()
         
-        if cmd == "help":
+        if cmd in ["help", "h"]:
             self.show_help()
-        elif cmd == "theme":
-            self.change_theme(parts[1] if len(parts) > 1 else None)
-        elif cmd == "history":
+        elif cmd in ["theme", "t"]:
+            theme = parts[1] if len(parts) > 1 else None
+            self.change_theme(theme)
+        elif cmd in ["history", "hist"]:
             self.show_history()
-        elif cmd == "clear":
+        elif cmd in ["clear", "cls", "c"]:
             self.console.clear()
-        elif cmd == "exit" or cmd == "quit":
-            raise KeyboardInterrupt
-        elif cmd == "status":
+            self.show_welcome()
+        elif cmd in ["status", "s"]:
             self.show_status()
-        elif cmd == "quickstart":
+        elif cmd in ["quickstart", "q"]:
             self.show_quickstart()
+        elif cmd in ["exit", "quit", "bye"]:
+            self.console.print("[yellow]Goodbye! Happy coding! 👋[/yellow]")
+            return True  # Signal to exit
         else:
-            self.console.print(f"[red]Unknown command: {command}[/red]")
-            self.show_help()
+            self.console.print(f"[red]Unknown command: /{cmd}[/red]")
+            self.console.print("[dim]Type /help for available commands[/dim]")
+        
+        return False
     
-    def process_ai_request(self, request: str):
-        """Process user request with AI"""
-        try:
-            # Add to session history
-            self.session_history.append({"user": request})
-            
-            # Show processing indicator
-            with Live(
-                Spinner("dots", f"Processing: {request[:50]}..."),
-                console=self.console
-            ):
-                # Determine request type and route appropriately
-                response = self.route_request(request)
-            
-            # Display response
-            self.display_response(response)
-            
-            # Add AI response to history
-            self.session_history.append({"assistant": response})
-            
-        except Exception as e:
-            self.console.print(f"[red]Failed to process request: {e}[/red]")
+    def show_help(self):
+        """Show available commands and usage"""
+        help_panel = Panel(
+            """[bold cyan]codeobit Interactive Commands:[/bold cyan]
+
+[yellow]Special Commands:[/yellow]
+  /help, /h          - Show this help
+  /theme [theme]     - Change color theme (auto, dark, light)
+  /history, /hist    - Show conversation history
+  /clear, /cls, /c   - Clear screen and show welcome
+  /status, /s        - Show current project status
+  /quickstart, /q    - Show quick start guide
+  /exit, /quit, /bye - Exit interactive mode
+
+[yellow]Natural Language:[/yellow]
+  Just type your questions or requests naturally!
+  
+  Examples:
+  • "Create a React app with authentication"
+  • "Debug this Python error: KeyError"
+  • "Browse https://example.com and summarize"
+  • "Generate tests for my login function"
+  • "Design a database for an e-commerce site"
+            """,
+            title="codeobit Help",
+            border_style="cyan"
+        )
+        self.console.print(help_panel)
     
-    def route_request(self, request: str) -> str:
+    def process_request(self, request: str) -> str:
         """Route request to appropriate AI function"""
         request_lower = request.lower()
         
@@ -303,115 +399,3 @@ class InteractiveCLI:
         
         self.console.print()  # Add spacing
     
-    def show_help(self):
-        """Show help information"""
-        help_table = Table(title="Available Commands")
-        help_table.add_column("Command", style="cyan")
-        help_table.add_column("Description", style="white")
-        
-        help_table.add_row("/help", "Show this help message")
-        help_table.add_row("/theme [theme]", "Change color theme (auto, dark, light)")
-        help_table.add_row("/history", "Show session history")
-        help_table.add_row("/clear", "Clear screen")
-        help_table.add_row("/status", "Show system status")
-        help_table.add_row("/quickstart", "Show quick start guide")
-        help_table.add_row("/exit", "Exit CLI")
-        
-        self.console.print(help_table)
-        
-        examples = """
-[bold blue]Example Prompts:[/bold blue]
-• "Generate requirements for a todo app"
-• "Design a REST API for user authentication"
-• "Write a Python function to validate email addresses"
-• "Create unit tests for a shopping cart class"
-• "Review this code for security vulnerabilities"
-• "Write documentation for this API endpoint"
-        """
-        self.console.print(examples)
-    
-    def change_theme(self, theme: Optional[str]):
-        """Change color theme"""
-        if not theme:
-            self.console.print(f"[blue]Current theme: {self.color_theme}[/blue]")
-            self.console.print("[blue]Available themes: auto, dark, light[/blue]")
-            return
-        
-        if theme in ["auto", "dark", "light"]:
-            self.color_theme = theme
-            self.console.print(f"[green]Theme changed to: {theme}[/green]")
-            # Save theme preference
-            config = self.config_manager.load_config() or {}
-            if 'ui' not in config:
-                config['ui'] = {}
-            config['ui']['color_scheme'] = theme
-            self.config_manager.save_config(config)
-        else:
-            self.console.print(f"[red]Invalid theme: {theme}[/red]")
-    
-    def show_history(self):
-        """Show session history"""
-        if not self.session_history:
-            self.console.print("[yellow]No history available[/yellow]")
-            return
-        
-        for i, entry in enumerate(self.session_history[-10:], 1):  # Show last 10
-            if "user" in entry:
-                self.console.print(f"[blue]{i}. User:[/blue] {entry['user']}")
-            elif "assistant" in entry:
-                self.console.print(f"[green]{i}. AI:[/green] {entry['assistant'][:100]}...")
-    
-    def show_status(self):
-        """Show system status"""
-        status_table = Table(title="System Status")
-        status_table.add_column("Component", style="cyan")
-        status_table.add_column("Status", style="white")
-        
-        # Check API connection
-        try:
-            if self.gemini_client and self.gemini_client.test_connection():
-                api_status = "[green]Connected[/green]"
-            else:
-                api_status = "[red]Disconnected[/red]"
-        except:
-            api_status = "[red]Error[/red]"
-        
-        status_table.add_row("Gemini API", api_status)
-        status_table.add_row("Config", "[green]Loaded[/green]")
-        status_table.add_row("Session History", f"{len(self.session_history)} entries")
-        status_table.add_row("Theme", self.color_theme)
-        
-        self.console.print(status_table)
-    
-    def show_quickstart(self):
-        """Show quickstart guide"""
-        quickstart = """
-# 🚀 Quick Start Guide
-
-## Prerequisites
-- Python 3.11+ installed
-- Google Gemini API key
-
-## Setup
-1. **Get API Key**: Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
-2. **Run CLI**: `python main.py interactive`
-3. **Enter API Key** when prompted
-4. **Start Building!**
-
-## Example Workflow
-```
-> Generate requirements for a task management app
-> Design the database schema for the requirements above
-> Write Python code for the user authentication system
-> Create unit tests for the authentication code
-> Generate API documentation
-```
-
-## Pro Tips
-- Be specific in your requests
-- Use `/help` for command reference
-- Use `/theme` to customize appearance
-- Chain requests to build complete solutions
-        """
-        
-        self.console.print(Markdown(quickstart))
