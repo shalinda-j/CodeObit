@@ -1,11 +1,11 @@
-# 🚀 AI Software Engineer CLI
+# 🚀 codeobit AI Software Engineer CLI
 
-A comprehensive AI-powered CLI tool for software engineering workflows using Google Gemini 2.5. Features both traditional command-line interface and interactive Gemini-style conversation mode.
+A comprehensive AI-powered development lifecycle automation tool using Google Gemini 2.5. Experience "vibe coding" with intelligent project automation, MCP design patterns, and complete development workflow integration.
 
 ## ✨ Features
 
-### 🔥 Interactive Mode (New!)
-Experience the power of conversational AI with our new interactive mode, similar to the official Gemini CLI:
+### 🔥 codeobit Interactive Experience
+Experience the ultimate "vibe coding" environment with AI-powered development automation:
 
 ```bash
 python main.py interactive
@@ -16,12 +16,15 @@ Or use the quick launcher:
 python gemini
 ```
 
-**Interactive Features:**
-- 🎨 Color themes (auto, dark, light)
-- 💬 Natural conversation with context awareness
-- 🔄 Session history tracking
-- ⚡ Intelligent request routing
-- 🎯 Specialized AI roles for different tasks
+**codeobit Features:**
+- 🎨 Beautiful ASCII branding with dynamic themes
+- 💬 Natural conversation with MCP design patterns
+- 🔄 Project memory and data collection
+- ⚡ Intelligent workflow automation
+- 🎯 Complete development lifecycle integration
+- 🌐 Browser automation and testing
+- 🐛 Advanced debugging with AI assistance
+- 📊 Token usage tracking and project status
 
 ### 🛠️ Traditional Commands
 - `requirements` - Analyze and manage project requirements

@@ -44,25 +44,38 @@ class InteractiveCLI:
     
     def show_welcome(self):
         """Display welcome screen with ASCII art and tips"""
-        # Create gradient text effect for GEMINI
-        title = Text("GEMINI", style="bold")
-        title.stylize("blue", 0, 2)
-        title.stylize("purple", 2, 4) 
-        title.stylize("magenta", 4, 6)
+        # Create codeobit ASCII art
+        codeobit_ascii = """
+ ██████╗ ██████╗ ██████╗ ███████╗ ██████╗ ██████╗ ██╗████████╗
+██╔════╝██╔═══██╗██╔══██╗██╔════╝██╔═══██╗██╔══██╗██║╚══██╔══╝
+██║     ██║   ██║██║  ██║█████╗  ██║   ██║██████╔╝██║   ██║   
+██║     ██║   ██║██║  ██║██╔══╝  ██║   ██║██╔══██╗██║   ██║   
+╚██████╗╚██████╔╝██████╔╝███████╗╚██████╔╝██████╔╝██║   ██║   
+ ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝ ╚═════╝ ╚═════╝ ╚═╝   ╚═╝   
+        """
         
-        welcome_panel = Panel.fit(
-            title,
-            subtitle="AI Software Engineer CLI",
-            border_style="blue"
+        welcome_panel = Panel(
+            f"[bold cyan]{codeobit_ascii}[/bold cyan]\n\n"
+            "[bold magenta]codeobit Interactive Development Environment[/bold magenta]\n\n"
+            "🚀 [yellow]Vibe coding experience with AI automation[/yellow]\n\n"
+            "• [green]Natural conversation[/green] - Describe what you want to build\n"
+            "• [yellow]MCP design patterns[/yellow] - Advanced development workflows\n"
+            "• [blue]Data collection & memory[/blue] - Intelligent project planning\n"
+            "• [magenta]Browser automation[/magenta] - Testing and data gathering\n"
+            "• [cyan]Complete lifecycle[/cyan] - From idea to production\n\n"
+            "[bold green]Ready for some serious vibe coding! ⚡[/bold green]",
+            title="🎯 codeobit Interactive Mode",
+            border_style="cyan"
         )
         
         tips = """
-[bold blue]Tips for getting started:[/bold blue]
-1. Ask questions, edit files, or run commands.
-2. Be specific for the best results.
-3. /help for more information.
+[bold cyan]Vibe coding tips:[/bold cyan]
+1. Describe your project idea naturally - I'll handle the technical details
+2. Ask for browsing data collection to enhance your project
+3. Use /project to start comprehensive development planning
+4. /browse <url> to collect and save data to project memory
 
-[dim]> write a short paragraph about why Gemini CLI is awesome[/dim]
+[dim]> create a social media app with real-time features[/dim]
         """
         
         self.console.print(welcome_panel)

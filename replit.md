@@ -10,12 +10,23 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (January 2025)
 
-**Interactive Gemini-Style CLI Mode Added**
-- Added conversational AI interface similar to official Gemini CLI
-- Features include color themes, session history, intelligent request routing
-- Natural language processing with specialized AI roles for different tasks
-- Quick launcher script (`python gemini`) for easy access
-- Comprehensive README documentation with usage examples
+**Major Rebranding to "codeobit" with Enhanced Features**
+- Complete interface rebranding with ASCII art "codeobit" logo
+- Enhanced project status dashboard with token usage tracking
+- Added comprehensive development lifecycle automation
+- New MCP design pattern integration for advanced workflows
+- "Vibe coding" experience with natural language project automation
+
+**New Command Modules Added**
+- `browse` - Web data collection with AI summarization and project memory storage
+- `debug` - Advanced debugging with AI-powered error analysis and fix suggestions  
+- `qa` - Quality assurance automation including browser testing and performance analysis
+- Enhanced all existing commands with MCP design patterns
+
+**Interactive Mode Enhancements**
+- Updated with codeobit branding and new welcome experience
+- Enhanced tips for vibe coding workflow
+- Integrated data collection and project memory features
 
 ## System Architecture
 
@@ -67,16 +78,21 @@ Preferred communication style: Simple, everyday language.
 - **Docs**: Documentation generation and management
 - **Project**: Project management and task tracking
 
-### 4. Data Models (`cli/models/`)
-- **Project**: Project structure and metadata
+### 4. Enhanced Command Modules (`cli/commands/`)
+- **Browse**: Web data collection with AI summarization and memory storage
+- **Debug**: Advanced debugging with AI-powered error analysis and solutions
+- **QA**: Quality assurance automation with browser testing and performance metrics
+
+### 5. Data Models (`cli/models/`)
+- **Project**: Project structure and metadata with token tracking
 - **Task**: Task management with status tracking
 - **Milestone**: Project milestone definitions
 - **Phase**: Project phase management
 
-### 5. Utilities (`cli/utils/`)
-- **ConfigManager**: Configuration file handling
-- **FileManager**: File system operations
-- **TemplateManager**: Project template management
+### 6. Utilities (`cli/utils/`)
+- **ConfigManager**: Configuration file handling with enhanced project status
+- **FileManager**: File system operations with memory storage capabilities
+- **TemplateManager**: Project template management with MCP patterns
 
 ## Data Flow
 
