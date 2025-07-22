@@ -3,10 +3,16 @@ Interactive mode for AI Software Engineer CLI
 """
 
 import os
+import json
+import webbrowser
+from datetime import datetime
+from pathlib import Path
 import sys
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List, Tuple
+from urllib.parse import urlparse
+
 from rich.console import Console
-from rich.prompt import Prompt, Confirm
+from rich.prompt import Prompt, Confirm, IntPrompt
 from rich.panel import Panel
 from rich.text import Text
 from rich.live import Live
@@ -14,10 +20,16 @@ from rich.spinner import Spinner
 from rich.table import Table
 from rich.markdown import Markdown
 from rich.syntax import Syntax
+from rich.progress import Progress
 
 from cli.ai.gemini_client import GeminiClient
 from cli.utils.config import ConfigManager
 from cli.utils.file_manager import FileManager
+
+# MCP Components
+from cli.web.models.search_model import SearchModel
+from cli.web.controllers.search_controller import SearchController
+from cli.web.presenters.search_presenter import SearchPresenter
 
 
 class InteractiveCLI:
@@ -30,6 +42,16 @@ class InteractiveCLI:
         self.gemini_client = None
         self.session_history = []
         self.color_theme = "auto"
+        self.project_data = self._load_project_data()
+        self.current_project = self.project_data.get('name', 'Interactive Session')
+        
+        # Initialize MCP components for web search
+        self.search_model = SearchModel()
+        self.search_presenter = SearchPresenter(console=self.console)
+        self.search_controller = SearchController(
+            model=self.search_model,
+            presenter=self.search_presenter
+        )
         
     def start(self):
         """Start interactive CLI session"""
@@ -42,6 +64,37 @@ class InteractiveCLI:
         except Exception as e:
             self.console.print(f"[red]Error: {e}[/red]")
     
+    def _load_project_data(self) -> dict:
+        """Load or initialize project data"""
+        try:
+            project_file = Path("project_data.json")
+            if project_file.exists():
+                with open(project_file, 'r') as f:
+                    data = json.load(f)
+            else:
+                data = {
+                    'project_name': 'Interactive Session',
+                    'tokens_used': 0,
+                    'web_resources': [],
+                    'requirements': [],
+                    'design': {},
+                    'notes': []
+                }
+                with open(project_file, 'w') as f:
+                    json.dump(data, f, indent=2)
+            return data
+        except Exception as e:
+            self.console.print(f"[red]Error loading project data: {e}[/red]")
+            return {}
+
+    def _save_project_data(self):
+        """Save project data to file"""
+        try:
+            with open("project_data.json", 'w') as f:
+                json.dump(self.project_data, f, indent=2)
+        except Exception as e:
+            self.console.print(f"[red]Error saving project data: {e}[/red]")
+
     def show_welcome(self):
         """Display welcome screen with ASCII art and tips"""
         # Create codeobit ASCII art
@@ -51,12 +104,15 @@ class InteractiveCLI:
 ██║     ██║   ██║██║  ██║█████╗  ██║   ██║██████╔╝██║   ██║   
 ██║     ██║   ██║██║  ██║██╔══╝  ██║   ██║██╔══██╗██║   ██║   
 ╚██████╗╚██████╔╝██████╔╝███████╗╚██████╔╝██████╔╝██║   ██║   
- ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝ ╚═════╝ ╚═════╝ ╚═╝   ╚═╝   
+ ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝ ╚═════╝ ╚═════╝ ⚠   ╚═╝   
         """
+        
+        project_name = self.project_data.get('project_name', 'New Project')
         
         welcome_panel = Panel(
             f"[bold cyan]{codeobit_ascii}[/bold cyan]\n\n"
-            "[bold magenta]codeobit Interactive Development Environment[/bold magenta]\n\n"
+            f"[bold magenta]codeobit Interactive Development Environment[/bold magenta]\n"
+            f"[dim]Project: {project_name}[/dim]\n\n"
             "🚀 [yellow]Vibe coding experience with AI automation[/yellow]\n\n"
             "• [green]Natural conversation[/green] - Describe what you want to build\n"
             "• [yellow]MCP design patterns[/yellow] - Advanced development workflows\n"
@@ -71,11 +127,13 @@ class InteractiveCLI:
         tips = """
 [bold cyan]Vibe coding tips:[/bold cyan]
 1. Describe your project idea naturally - I'll handle the technical details
-2. Ask for browsing data collection to enhance your project
-3. Use /project to start comprehensive development planning
-4. /browse <url> to collect and save data to project memory
+2. Use /browse <url> to collect web resources
+3. Use /project to manage your project
+4. Type /help for all available commands
 
 [dim]> create a social media app with real-time features[/dim]
+[dim]> /browse https://example.com/design-patterns[/dim]
+[dim]> /project requirements "Add user authentication"[/dim]
         """
         
         self.console.print(welcome_panel)
@@ -229,6 +287,322 @@ class InteractiveCLI:
         )
         self.console.print(response_panel)
     
+    def _is_valid_url(self, url: str) -> bool:
+        """Check if a string is a valid URL"""
+        try:
+            result = urlparse(url)
+            return all([result.scheme, result.netloc])
+        except ValueError:
+            return False
+
+    def _browse_web(self, url: str):
+        """
+        Browse a URL, extract content, and save to project memory
+        
+        Args:
+            url: The URL to browse and extract content from
+            
+        Returns:
+            str: Status message with the result of the operation
+        """
+        try:
+            import requests
+            from bs4 import BeautifulSoup
+            import hashlib
+            from urllib.parse import urlparse
+            
+            self.console.print(f"[blue]🌐 Fetching {url}...[/blue]")
+            
+            # Validate and clean URL
+            if not url.startswith(('http://', 'https://')):
+                url = 'https://' + url
+            
+            # Generate a unique ID for this resource
+            url_hash = hashlib.md5(url.encode()).hexdigest()
+            timestamp = datetime.now().isoformat()
+            
+            # Add to browsing history
+            if not hasattr(self, 'browsing_history'):
+                self.browsing_history = []
+                
+            self.browsing_history.append({
+                'url': url,
+                'timestamp': timestamp,
+                'id': url_hash
+            })
+            
+            # Fetch the URL with timeout
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Referer': 'https://www.google.com/'
+            }
+            
+            response = requests.get(
+                url, 
+                headers=headers,
+                timeout=10,
+                allow_redirects=True
+            )
+            
+            if response.status_code != 200:
+                return f"[red]Error: Could not fetch URL (Status {response.status_code})[/red]"
+            
+            # Parse the content
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Extract relevant information
+            title = soup.title.string.strip() if soup.title else 'No title'
+            
+            # Remove unwanted elements
+            for element in soup(['script', 'style', 'nav', 'footer', 'header', 'iframe', 'noscript']):
+                element.decompose()
+                
+            # Extract main content (try to get article or main content)
+            main_content = soup.find('article') or soup.find('main') or soup
+            text_content = ' '.join(p.get_text().strip() for p in main_content.find_all(['p', 'h1', 'h2', 'h3', 'li']))
+            
+            # Clean up whitespace
+            text_content = ' '.join(text_content.split())
+            
+            # Extract metadata
+            meta_description = ''
+            if soup.find('meta', attrs={'name': 'description'}):
+                meta_description = soup.find('meta', attrs={'name': 'description'})['content']
+            
+            # Extract links
+            links = [a['href'] for a in soup.find_all('a', href=True)]
+            
+            # Summarize the content using AI
+            summary = self._summarize_web_content(title, text_content[:15000])  # Increased content size limit
+            
+            # Create resource object
+            domain = urlparse(url).netloc
+            resource = {
+                'id': url_hash,
+                'url': url,
+                'domain': domain,
+                'title': title,
+                'description': meta_description,
+                'content': text_content[:50000],  # Store first 50k chars
+                'summary': summary,
+                'timestamp': timestamp,
+                'content_type': response.headers.get('Content-Type', '').split(';')[0],
+                'status_code': response.status_code,
+                'links': links[:100],  # Store first 100 links
+                'word_count': len(text_content.split()),
+                'project': self.project_data.get('name', 'default')
+            }
+            
+            # Initialize web_resources if it doesn't exist
+            if 'web_resources' not in self.project_data:
+                self.project_data['web_resources'] = []
+            
+            # Check if URL already exists in resources
+            existing_idx = next((i for i, r in enumerate(self.project_data['web_resources']) 
+                              if r.get('url') == url), None)
+            
+            if existing_idx is not None:
+                # Update existing resource
+                self.project_data['web_resources'][existing_idx].update(resource)
+                action = "updated"
+            else:
+                # Add new resource
+                self.project_data['web_resources'].append(resource)
+                action = "saved"
+            
+            # Save to project file
+            self._save_project_data()
+            
+            # Format response
+            response_panel = Panel(
+                f"[bold green]✓ Resource {action} to project memory[/bold green]\n"
+                f"[cyan]Title:[/cyan] {title}\n"
+                f"[cyan]URL:[/cyan] {url}\n"
+                f"[cyan]Domain:[/cyan] {domain}\n"
+                f"[cyan]Words:[/cyan] {resource['word_count']:,}\n"
+                f"[cyan]Summary:[/cyan] {summary}",
+                title=f"🌐 {domain}",
+                border_style="green"
+            )
+            
+            return response_panel
+            
+        except requests.exceptions.RequestException as e:
+            return f"[red]Error fetching URL: {str(e)}[/red]"
+        except Exception as e:
+            import traceback
+            return f"[red]Error processing URL: {str(e)}\n\n{traceback.format_exc()}[/red]"
+    
+    def _summarize_web_content(self, title: str, content: str) -> str:
+        """Generate a summary of web content using AI"""
+        if not self.gemini_client:
+            return "[yellow]AI client not available. Could not generate summary.[/yellow]"
+        
+        prompt = f"""Please summarize the following web content in a concise way, focusing on key points 
+        that would be useful for a software development project. Include any technical details, 
+        best practices, or important concepts mentioned.
+
+        Title: {title}
+        
+        Content:
+        {content}
+        """
+        
+        try:
+            return self.gemini_client.generate_content(prompt)
+        except Exception as e:
+            return f"[yellow]Could not generate summary: {str(e)}[/yellow]"
+    
+    def _handle_project_command(self, args: List[str]) -> str:
+        """Handle project management commands"""
+        if not args:
+            return self._show_project_status()
+            
+        subcmd = args[0].lower()
+        
+        if subcmd in ["new", "init"]:
+            return self._init_project(args[1:] if len(args) > 1 else [])
+        elif subcmd == "requirements":
+            return self._manage_requirements(args[1:] if len(args) > 1 else [])
+        elif subcmd == "design":
+            return self._manage_design(args[1:] if len(args) > 1 else [])
+        elif subcmd == "notes":
+            return self._manage_notes(args[1:] if len(args) > 1 else [])
+        elif subcmd == "status":
+            return self._show_project_status()
+        elif subcmd in ["help", "h"]:
+            return self._show_project_help()
+        else:
+            return f"[red]Unknown project command: {subcmd}[/red]\n{self._show_project_help()}"
+    
+    def _show_project_status(self) -> str:
+        """Show current project status"""
+        if not self.project_data:
+            return "[yellow]No active project. Use /project new to create one.[/yellow]"
+        
+        project_name = self.project_data.get('project_name', 'Unnamed Project')
+        requirements = self.project_data.get('requirements', [])
+        resources = self.project_data.get('web_resources', [])
+        notes = self.project_data.get('notes', [])
+        
+        status = f"[bold cyan]Project: {project_name}[/bold cyan]\n"
+        status += f"[bold]Requirements:[/bold] {len(requirements)}\n"
+        status += f"[bold]Resources:[/bold] {len(resources)}\n"
+        status += f"[bold]Notes:[/bold] {len(notes)}\n"
+        
+        if requirements:
+            status += "\n[bold]Top Requirements:[/bold]\n"
+            for i, req in enumerate(requirements[:3], 1):
+                status += f"  {i}. {req.get('description', 'No description')[:60]}...\n"
+        
+        return status
+    
+    def _init_project(self, args: List[str]) -> str:
+        """Initialize a new project"""
+        if not args:
+            project_name = Prompt.ask("[blue]Enter project name[/blue]")
+        else:
+            project_name = ' '.join(args)
+        
+        self.project_data = {
+            'project_name': project_name,
+            'created_at': datetime.now().isoformat(),
+            'tokens_used': 0,
+            'web_resources': [],
+            'requirements': [],
+            'design': {},
+            'notes': []
+        }
+        
+        self._save_project_data()
+        return f"[green]✓ Created new project: {project_name}[/green]"
+    
+    def _manage_requirements(self, args: List[str]) -> str:
+        """Manage project requirements"""
+        if not args:
+            # List all requirements
+            requirements = self.project_data.get('requirements', [])
+            if not requirements:
+                return "[yellow]No requirements added yet. Use /project requirements add <description>[/yellow]"
+            
+            result = "[bold]Project Requirements:[/bold]\n"
+            for i, req in enumerate(requirements, 1):
+                result += f"  {i}. {req.get('description', 'No description')}\n"
+            return result
+        
+        action = args[0].lower()
+        
+        if action == "add":
+            if len(args) < 2:
+                return "[red]Please provide a requirement description[/red]"
+                
+            requirement = {
+                'description': ' '.join(args[1:]),
+                'status': 'pending',
+                'created_at': datetime.now().isoformat()
+            }
+            
+            if 'requirements' not in self.project_data:
+                self.project_data['requirements'] = []
+                
+            self.project_data['requirements'].append(requirement)
+            self._save_project_data()
+            return "[green]✓ Added requirement[/green]"
+            
+        return f"[red]Unknown requirements command: {action}[/red]"
+    
+    def _manage_design(self, args: List[str]) -> str:
+        """Manage project design elements"""
+        return "[yellow]Design management coming soon![/yellow]"
+    
+    def _manage_notes(self, args: List[str]) -> str:
+        """Manage project notes"""
+        if not args:
+            # List all notes
+            notes = self.project_data.get('notes', [])
+            if not notes:
+                return "[yellow]No notes added yet. Use /project notes add <note>[/yellow]"
+            
+            result = "[bold]Project Notes:[/bold]\n"
+            for i, note in enumerate(notes, 1):
+                result += f"  {i}. {note.get('content', 'No content')[:60]}...\n"
+            return result
+        
+        action = args[0].lower()
+        
+        if action == "add":
+            if len(args) < 2:
+                return "[red]Please provide note content[/red]"
+                
+            note = {
+                'content': ' '.join(args[1:]),
+                'created_at': datetime.now().isoformat()
+            }
+            
+            if 'notes' not in self.project_data:
+                self.project_data['notes'] = []
+                
+            self.project_data['notes'].append(note)
+            self._save_project_data()
+            return "[green]✓ Added note[/green]"
+            
+        return f"[red]Unknown notes command: {action}[/red]"
+    
+    def _show_project_help(self) -> str:
+        """Show help for project commands"""
+        return """[bold]Project Management Commands:[/bold]
+  /project new <name>      - Create a new project
+  /project requirements    - List requirements
+  /project requirements add <desc> - Add a requirement
+  /project design          - View/Edit design
+  /project notes           - View notes
+  /project notes add <note> - Add a note
+  /project status         - Show project status
+  /project help           - Show this help
+        """
+
     def handle_special_command(self, command: str):
         """Handle special slash commands"""
         parts = command[1:].split()  # Remove the '/' prefix
@@ -236,6 +610,7 @@ class InteractiveCLI:
             return False
             
         cmd = parts[0].lower()
+        args = parts[1:] if len(parts) > 1 else []
         
         if cmd in ["help", "h"]:
             self.show_help()
@@ -251,13 +626,42 @@ class InteractiveCLI:
             self.show_status()
         elif cmd in ["quickstart", "q"]:
             self.show_quickstart()
+        elif cmd == "browse":
+            if len(parts) < 2:
+                self.console.print("[red]Please provide a URL to browse[/red]")
+            else:
+                url = parts[1]
+                if not self._is_valid_url(url):
+                    url = f"https://{url}"  # Try adding https:// if missing
+                if not self._is_valid_url(url):
+                    self.console.print("[red]Invalid URL. Please include http:// or https://[/red]")
+                else:
+                    result = self._browse_web(url)
+                    self.console.print(result)
+        elif cmd == "project":
+            result = self._handle_project_command(parts[1:] if len(parts) > 1 else [])
+            self.console.print(result)
+        # Search commands
+        elif cmd in ["search", "find", "lookup"]:
+            self.console.print(self.search_controller.handle_command('search', args))
+            return True
+            
+        elif cmd == "history" and not args:  # Only handle /history without arguments
+            self.console.print(self.search_controller.handle_command('history'))
+            return True
+            
+        elif cmd == "clear-history":
+            self.console.print(self.search_controller.handle_command('clear-history'))
+            return True
+            
+        elif cmd == "help" and args and args[0] == "search":
+            self.console.print(self.search_controller.handle_command('help'))
+            return True
+            
         elif cmd in ["exit", "quit", "bye"]:
             self.console.print("[yellow]Goodbye! Happy coding! 👋[/yellow]")
             return True  # Signal to exit
-        else:
-            self.console.print(f"[red]Unknown command: /{cmd}[/red]")
-            self.console.print("[dim]Type /help for available commands[/dim]")
-        
+            
         return False
     
     def show_help(self):
@@ -272,7 +676,15 @@ class InteractiveCLI:
   /clear, /cls, /c   - Clear screen and show welcome
   /status, /s        - Show current project status
   /quickstart, /q    - Show quick start guide
-  /exit, /quit, /bye - Exit interactive mode
+
+[yellow]Search Commands:[/yellow]
+  /search [query]  - Search the web
+  /history         - View search history
+  /clear-history   - Clear search history
+
+[yellow]Project Management:[/bold]
+  /project [command]  - Manage project (requirements, design, notes)
+  /browse <url>      - Browse and save web resources
 
 [yellow]Natural Language:[/yellow]
   Just type your questions or requests naturally!
@@ -280,7 +692,6 @@ class InteractiveCLI:
   Examples:
   • "Create a React app with authentication"
   • "Debug this Python error: KeyError"
-  • "Browse https://example.com and summarize"
   • "Generate tests for my login function"
   • "Design a database for an e-commerce site"
             """,
@@ -288,6 +699,11 @@ class InteractiveCLI:
             border_style="cyan"
         )
         self.console.print(help_panel)
+        
+        # Show project-specific help if available
+        if self.project_data:
+            self.console.print("\n[bold]Project Management Help:[/bold]")
+            self.console.print(self._show_project_help())
     
     def process_request(self, request: str) -> str:
         """Route request to appropriate AI function"""
