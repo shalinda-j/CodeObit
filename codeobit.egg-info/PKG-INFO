@@ -1,3 +1,36 @@
+Metadata-Version: 2.4
+Name: codeobit
+Version: 1.0.0b0
+Summary: AI-Powered Interactive Development Environment
+Author-email: codeobit Development Team <dev@codeobit.dev>
+License: MIT
+Project-URL: Homepage, https://github.com/yourusername/codeobit-v1
+Project-URL: Repository, https://github.com/yourusername/codeobit-v1
+Project-URL: Documentation, https://github.com/yourusername/codeobit-v1/blob/main/README.md
+Project-URL: Bug Tracker, https://github.com/yourusername/codeobit-v1/issues
+Keywords: ai,cli,development,automation,gemini,interactive,code-generation
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Software Development :: Code Generators
+Classifier: Topic :: Text Processing :: Linguistic
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: beautifulsoup4>=4.13.4
+Requires-Dist: click>=8.2.1
+Requires-Dist: google-genai>=1.26.0
+Requires-Dist: pyyaml>=6.0.2
+Requires-Dist: requests>=2.32.4
+Requires-Dist: rich>=14.0.0
+Requires-Dist: selenium>=4.34.2
+Dynamic: license-file
+
 # 🎯 codeobit - AI-Powered Interactive Development Environment
 
 **Public Beta v1.0.0-beta** - The ultimate vibe coding experience with AI automation

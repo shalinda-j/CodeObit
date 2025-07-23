@@ -1,8 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "repl-nix-workspace"
-version = "0.1.0"
-description = "Add your description here"
+name = "codeobit"
+version = "1.0.0-beta"
+description = "AI-Powered Interactive Development Environment"
+authors = [{name = "codeobit Development Team", email = "dev@codeobit.dev"}]
+license = {text = "MIT"}
+readme = "README.md"
 requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Text Processing :: Linguistic",
+]
+keywords = ["ai", "cli", "development", "automation", "gemini", "interactive", "code-generation"]
 dependencies = [
     "beautifulsoup4>=4.13.4",
     "click>=8.2.1",
@@ -12,3 +32,15 @@ dependencies = [
     "rich>=14.0.0",
     "selenium>=4.34.2",
 ]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/codeobit-v1"
+Repository = "https://github.com/yourusername/codeobit-v1"
+Documentation = "https://github.com/yourusername/codeobit-v1/blob/main/README.md"
+"Bug Tracker" = "https://github.com/yourusername/codeobit-v1/issues"
+
+[project.scripts]
+codeobit = "main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]

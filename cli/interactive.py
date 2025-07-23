@@ -5,10 +5,12 @@ Interactive mode for AI Software Engineer CLI
 import os
 import json
 import webbrowser
+import subprocess
+import shlex
 from datetime import datetime
 from pathlib import Path
 import sys
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Dict, Any, List, Tuple, Union
 from urllib.parse import urlparse
 
 from rich.console import Console
@@ -127,7 +129,7 @@ class InteractiveCLI:
         tips = """
 [bold cyan]Vibe coding tips:[/bold cyan]
 1. Describe your project idea naturally - I'll handle the technical details
-2. Use /browse <url> to collect web resources
+        2. Use /feedback to provide real-time feedback and collaborate
 3. Use /project to manage your project
 4. Type /help for all available commands
 
@@ -179,15 +181,16 @@ class InteractiveCLI:
             sys.exit(1)
     
     def main_loop(self):
-        """Main interactive chat loop - stays open like Google CLI"""
+        """Main interactive chat loop with enhanced project management"""
         while True:
             try:
-                # Show chat prompt with project context
+                # Show chat prompt with project context and current directory
                 project_indicator = self.get_project_indicator()
+                current_dir = Path.cwd().name
                 
                 # Get user input with rich prompt
                 user_input = Prompt.ask(
-                    f"[cyan]codeobit[/cyan] [dim]{project_indicator}[/dim] [blue]>[/blue]",
+                    f"[cyan]codeobit[/cyan] [dim]{project_indicator}[/dim] [blue]({current_dir})>[/blue]",
                     console=self.console
                 ).strip()
                 
@@ -195,13 +198,29 @@ class InteractiveCLI:
                 if not user_input:
                     continue
                 
-                # Handle special commands first
-                if user_input.startswith('/'):
-                    if self.handle_special_command(user_input):
-                        break  # Exit if /exit was called
+                # Handle shell commands (start with ! or are common shell commands)
+                if user_input.startswith('!') or user_input.split()[0].lower() in ['cd', 'ls', 'dir', 'pwd', 'cat', 'echo', 'type', 'cls']:
+                    cmd = user_input[1:] if user_input.startswith('!') else user_input
+                    result = self.execute_shell_command(cmd)
+                    
+                    # For Windows, ensure we have output for common commands
+                    if sys.platform == 'win32' and not result['output'] and not result['error']:
+                        if cmd.lower() == 'pwd':
+                            result['output'] = os.getcwd()
+                    
+                    # Display command output
+                    if result['output']:
+                        self.console.print(result['output'], end='')
+                    if result['error']:
+                        self.console.print(f"[red]{result['error']}[/red]")
                     continue
                 
-                # Show typing indicator
+                # Handle special commands (start with /)
+                if user_input.startswith('/'):
+                    if self.handle_special_command(user_input):
+                        continue
+                
+                # Process regular input with AI
                 with self.console.status("[bold green]codeobit is thinking...", spinner="dots"):
                     # Add to session history
                     self.session_history.append({
@@ -222,14 +241,18 @@ class InteractiveCLI:
                     # Add response to history
                     self.session_history[-1]['assistant'] = response
                 
-            except EOFError:
-                self.console.print("\n[yellow]Chat ended (Ctrl+D detected)[/yellow]")
-                break
             except KeyboardInterrupt:
-                self.console.print("\n[yellow]Chat interrupted (Ctrl+C detected)[/yellow]")
-                break
+                self.console.print("\n[yellow]Type 'exit' or press Ctrl+C again to quit[/yellow]")
+                try:
+                    # Give user a chance to type 'exit' or press Ctrl+C again
+                    user_input = input("\nContinue? (y/n): ").strip().lower()
+                    if user_input in ['n', 'no', 'exit', 'quit']:
+                        break
+                except KeyboardInterrupt:
+                    break
             except Exception as e:
-                self.console.print(f"[red]Error in chat: {str(e)}[/red]")
+                self.console.print(f"[red]Error: {e}[/red]")
+                continue
     
     def get_project_indicator(self):
         """Get current project indicator for prompt"""
@@ -477,6 +500,22 @@ class InteractiveCLI:
         else:
             return f"[red]Unknown project command: {subcmd}[/red]\n{self._show_project_help()}"
     
+    def handle_feedback(self, feedback: str) -> None:
+        """Handle real-time feedback and collaboration"""
+        try:
+            self.console.print("[blue]Collecting feedback...[/blue]")
+            response = self.gemini_client.generate_content(
+                f"Collaborate and improve the project based on this feedback: {feedback}",
+                system_instruction=(
+                    "You are a collaborative AI assistant. Process this feedback for the project "
+                    "and provide actionable improvements and updates."
+                )
+            )
+            self.console.print(Markdown(response))
+            self._save_project_data()
+        except Exception as e:
+            self.console.print(f"[red]Feedback processing failed: {e}[/red]")
+
     def _show_project_status(self) -> str:
         """Show current project status"""
         if not self.project_data:
@@ -641,6 +680,28 @@ class InteractiveCLI:
         elif cmd == "project":
             result = self._handle_project_command(parts[1:] if len(parts) > 1 else [])
             self.console.print(result)
+        elif cmd == "feedback":
+            if len(parts) < 2:
+                self.console.print("[red]Please provide feedback content[/red]")
+            else:
+                feedback = ' '.join(parts[1:])
+                self.handle_feedback(feedback)
+        elif cmd == "generate":
+            if len(parts) < 2:
+                self.console.print("[red]Please specify what to generate (file, function, class, etc.)[/red]")
+            else:
+                self.handle_generate_command(parts[1:])
+        elif cmd == "analyze":
+            if len(parts) < 2:
+                self.console.print("[red]Please provide a file to analyze[/red]")
+            else:
+                file_path = parts[1]
+                self.analyze_file(file_path)
+        elif cmd == "test":
+            if len(parts) < 2:
+                self.console.print("[red]Please specify what to test (generate, run, file)[/red]")
+            else:
+                self.handle_test_command(parts[1:])
         # Search commands
         elif cmd in ["search", "find", "lookup"]:
             self.console.print(self.search_controller.handle_command('search', args))
@@ -664,6 +725,83 @@ class InteractiveCLI:
             
         return False
     
+    def execute_shell_command(self, command: str, cwd: Optional[str] = None) -> Dict[str, Union[str, int]]:
+        """
+        Execute a shell command and return the result
+        
+        Args:
+            command: The shell command to execute
+            cwd: Working directory for the command
+            
+        Returns:
+            Dict containing command output, error, and return code
+        """
+        try:
+            # Handle cd command separately as it needs to change the working directory
+            if command.lower().startswith('cd'):
+                try:
+                    target_dir = command[2:].strip() or str(Path.home())
+                    os.chdir(target_dir)
+                    return {
+                        'output': f'Changed directory to {os.getcwd()}',
+                        'error': '',
+                        'return_code': 0
+                    }
+                except Exception as e:
+                    return {
+                        'output': '',
+                        'error': f'cd: {str(e)}',
+                        'return_code': 1
+                    }
+            
+            # On Windows, use 'cmd /c' for command execution
+            if sys.platform == 'win32':
+                # Map common Unix commands to Windows equivalents
+                cmd_map = {
+                    'ls': 'dir',
+                    'll': 'dir',
+                    'pwd': 'cd',
+                    'cat': 'type',
+                    'clear': 'cls'
+                }
+                
+                # Split command and map if necessary
+                parts = command.split()
+                if parts and parts[0] in cmd_map:
+                    parts[0] = cmd_map[parts[0]]
+                    command = ' '.join(parts)
+                
+                # Execute with cmd /c
+                result = subprocess.run(
+                    f'cmd /c {command}',
+                    cwd=cwd or os.getcwd(),
+                    capture_output=True,
+                    text=True,
+                    shell=True
+                )
+            else:
+                # On Unix-like systems, use shlex for proper argument splitting
+                args = shlex.split(command)
+                result = subprocess.run(
+                    args,
+                    cwd=cwd or os.getcwd(),
+                    capture_output=True,
+                    text=True
+                )
+            
+            return {
+                'output': result.stdout,
+                'error': result.stderr,
+                'return_code': result.returncode
+            }
+            
+        except Exception as e:
+            return {
+                'output': '',
+                'error': f'Error executing command: {str(e)}',
+                'return_code': 1
+            }
+    
     def show_help(self):
         """Show available commands and usage"""
         help_panel = Panel(
@@ -677,14 +815,25 @@ class InteractiveCLI:
   /status, /s        - Show current project status
   /quickstart, /q    - Show quick start guide
 
+[yellow]Shell Commands:[/yellow]
+  !<command>         - Execute shell command (e.g., !ls, !pwd, !cd ..)
+  cd <dir>           - Change directory (also works with !cd)
+  pwd, ls, dir, etc. - Standard shell commands with ! prefix
+
 [yellow]Search Commands:[/yellow]
   /search [query]  - Search the web
   /history         - View search history
   /clear-history   - Clear search history
 
-[yellow]Project Management:[/bold]
+[yellow]Code Generation & Analysis:[/yellow]
+  /generate <type>   - Generate code (file, function, class, api, test)
+  /analyze <file>    - Analyze file for quality, security, performance
+  /test <action>     - Test commands (generate, run, analyze)
+
+[yellow]Project Management:[/yellow]
   /project [command]  - Manage project (requirements, design, notes)
   /browse <url>      - Browse and save web resources
+  /feedback <message> - Provide real-time feedback and collaboration
 
 [yellow]Natural Language:[/yellow]
   Just type your questions or requests naturally!
@@ -789,29 +938,438 @@ class InteractiveCLI:
             return self.gemini_client.generate_content(request, system_instruction=system_instruction)
         return "Error: Gemini client not initialized"
     
-    def display_response(self, response: str):
+    def change_theme(self, theme: str = None) -> None:
+        """Change the color theme of the console
+        
+        Args:
+            theme: The theme to change to ('auto', 'dark', or 'light'). If None, cycles through themes.
+        """
+        themes = ["auto", "dark", "light"]
+        
+        if theme and theme.lower() in themes:
+            self.color_theme = theme.lower()
+        else:
+            # Cycle to next theme if no theme specified or invalid theme
+            current_idx = themes.index(self.color_theme) if self.color_theme in themes else 0
+            self.color_theme = themes[(current_idx + 1) % len(themes)]
+        
+        # Apply the theme
+        if self.color_theme == "dark":
+            self.console.style = "white on black"
+        elif self.color_theme == "light":
+            self.console.style = "black on white"
+        else:  # auto
+            self.console.style = None
+        
+        self.console.print(f"[green]Theme set to: {self.color_theme}[/green]")
+        
+    def display_response(self, response: str) -> None:
         """Display AI response with proper formatting"""
         # Check if response contains code
+        if not isinstance(response, str):
+            response = str(response)
+            
         if "```" in response:
             # Split response into text and code blocks
-            parts = response.split("```")
+            parts: List[str] = response.split("```")
             for i, part in enumerate(parts):
+                part = part.strip()
+                if not part:
+                    continue
+                    
                 if i % 2 == 0:
-                    # Text part
-                    if part.strip():
-                        self.console.print(Markdown(part.strip()))
+                    # Text part (markdown)
+                    self.console.print(Markdown(part))
                 else:
-                    # Code part
-                    lines = part.strip().split('\n')
-                    if lines:
-                        language = lines[0] if lines[0] else "text"
-                        code = '\n'.join(lines[1:]) if len(lines) > 1 else lines[0]
-                        if code.strip():
-                            syntax = Syntax(code, language, theme="monokai", line_numbers=True)
-                            self.console.print(syntax)
+                    # Code part (syntax highlighting)
+                    lines: List[str] = part.split('\n')
+                    if not lines:
+                        continue
+                        
+                    language: str = lines[0].strip() if lines and lines[0].strip() else "text"
+                    code: str = '\n'.join(lines[1:]) if len(lines) > 1 else lines[0]
+                    
+                    if code.strip():
+                        syntax: Syntax = Syntax(
+                            code=code,
+                            lexer=language,
+                            theme="monokai",
+                            line_numbers=True,
+                            word_wrap=True
+                        )
+                        self.console.print(syntax)
         else:
             # Regular markdown response
             self.console.print(Markdown(response))
         
-        self.console.print()  # Add spacing
+        # Add spacing after response
+        self.console.print()
     
+    def show_history(self):
+        """Show conversation history"""
+        if not self.session_history:
+            self.console.print("[yellow]No conversation history available[/yellow]")
+            return
+        
+        history_panel = Panel(
+            "\n".join([
+                f"**User:** {item.get('user', 'N/A')}\n**Assistant:** {item.get('assistant', 'N/A')[:100]}..."
+                for item in self.session_history[-5:]  # Show last 5 interactions
+            ]),
+            title="Conversation History",
+            border_style="blue"
+        )
+        self.console.print(history_panel)
+    
+    def show_status(self):
+        """Show current system status"""
+        status_table = Table(title="System Status")
+        status_table.add_column("Component", style="cyan")
+        status_table.add_column("Status", style="green")
+        
+        status_table.add_row("Gemini Client", "✓ Connected" if self.gemini_client else "✗ Not connected")
+        status_table.add_row("Project", self.project_data.get('project_name', 'No project'))
+        status_table.add_row("Theme", self.color_theme.title())
+        status_table.add_row("History Items", str(len(self.session_history)))
+        
+        self.console.print(status_table)
+    
+    def show_quickstart(self):
+        """Show quick start guide"""
+        quickstart_panel = Panel(
+            """[bold cyan]Quick Start Guide[/bold cyan]\n\n
+1. **Start a new project**: `/project new "My App"`
+2. **Browse web resources**: `/browse https://docs.python.org`
+3. **Ask for help**: "How do I create a REST API?"
+4. **Generate code**: "Create a Python function to validate emails"
+5. **Get requirements**: "Write user stories for a todo app"
+
+[yellow]Pro tip:[/yellow] Just describe what you want to build!
+            """,
+            title="🚀 Getting Started",
+            border_style="green"
+        )
+        self.console.print(quickstart_panel)
+    
+    def handle_generate_command(self, args: List[str]):
+        """Handle code generation commands"""
+        if not args:
+            self.console.print("[red]Please specify what to generate (file, function, class, api, etc.)[/red]")
+            return
+        
+        item_type = args[0].lower()
+        description = ' '.join(args[1:]) if len(args) > 1 else ""
+        
+        if item_type == "file":
+            self.generate_file(description)
+        elif item_type == "function":
+            self.generate_function(description)
+        elif item_type == "class":
+            self.generate_class(description)
+        elif item_type == "api":
+            self.generate_api(description)
+        elif item_type == "test":
+            self.generate_test(description)
+        else:
+            self.console.print(f"[yellow]Generating {item_type}: {description}[/yellow]")
+            # Use AI to generate based on description
+            if self.gemini_client:
+                prompt = f"Generate {item_type} based on this description: {description}"
+                response = self.gemini_client.generate_content(prompt)
+                self.console.print(Panel(Markdown(response), title=f"Generated {item_type}", border_style="green"))
+    
+    def generate_file(self, description: str):
+        """Generate a complete file based on description"""
+        if not description:
+            description = Prompt.ask("[blue]What kind of file do you want to generate?[/blue]")
+        
+        filename = Prompt.ask("[blue]Enter filename (with extension)[/blue]")
+        
+        if self.gemini_client:
+            prompt = f"""Generate a complete, production-ready file for: {description}
+            
+Filename: {filename}
+            
+Include:
+            - Proper imports and dependencies
+            - Well-structured code with comments
+            - Error handling where appropriate
+            - Best practices for the file type
+            
+Generate only the file content, no additional explanation."""
+            
+            with self.console.status("[bold green]Generating file...", spinner="dots"):
+                response = self.gemini_client.generate_content(prompt)
+            
+            # Ask if user wants to save to file
+            if Confirm.ask(f"Save generated content to {filename}?"):
+                try:
+                    with open(filename, 'w', encoding='utf-8') as f:
+                        # Extract code from markdown if present
+                        if '```' in response:
+                            lines = response.split('\n')
+                            in_code_block = False
+                            code_lines = []
+                            for line in lines:
+                                if line.strip().startswith('```'):
+                                    in_code_block = not in_code_block
+                                    continue
+                                if in_code_block:
+                                    code_lines.append(line)
+                            response = '\n'.join(code_lines)
+                        
+                        f.write(response)
+                    self.console.print(f"[green]✓ File saved as {filename}[/green]")
+                except Exception as e:
+                    self.console.print(f"[red]Error saving file: {e}[/red]")
+            else:
+                self.console.print(Panel(Markdown(response), title=f"Generated File: {filename}", border_style="green"))
+    
+    def generate_function(self, description: str):
+        """Generate a function based on description"""
+        if not description:
+            description = Prompt.ask("[blue]Describe the function you want to generate[/blue]")
+        
+        language = Prompt.ask("[blue]Programming language[/blue]", default="python")
+        
+        if self.gemini_client:
+            prompt = f"""Generate a well-documented {language} function for: {description}
+            
+Include:
+            - Proper function signature with type hints (if applicable)
+            - Comprehensive docstring
+            - Error handling
+            - Input validation
+            - Example usage in comments
+            
+Generate only the function code, no additional explanation."""
+            
+            with self.console.status("[bold green]Generating function...", spinner="dots"):
+                response = self.gemini_client.generate_content(prompt)
+            
+            self.console.print(Panel(Markdown(f"```{language}\n{response}\n```"), title="Generated Function", border_style="green"))
+    
+    def generate_class(self, description: str):
+        """Generate a class based on description"""
+        if not description:
+            description = Prompt.ask("[blue]Describe the class you want to generate[/blue]")
+        
+        language = Prompt.ask("[blue]Programming language[/blue]", default="python")
+        
+        if self.gemini_client:
+            prompt = f"""Generate a well-structured {language} class for: {description}
+            
+Include:
+            - Proper class definition with inheritance if needed
+            - Constructor with parameters
+            - Essential methods with docstrings
+            - Properties and getters/setters if applicable
+            - Type hints (if applicable)
+            - Example usage
+            
+Generate only the class code, no additional explanation."""
+            
+            with self.console.status("[bold green]Generating class...", spinner="dots"):
+                response = self.gemini_client.generate_content(prompt)
+            
+            self.console.print(Panel(Markdown(f"```{language}\n{response}\n```"), title="Generated Class", border_style="green"))
+    
+    def generate_api(self, description: str):
+        """Generate API endpoints based on description"""
+        if not description:
+            description = Prompt.ask("[blue]Describe the API you want to generate[/blue]")
+        
+        framework = Prompt.ask("[blue]Framework[/blue]", default="FastAPI")
+        
+        if self.gemini_client:
+            prompt = f"""Generate a complete {framework} API for: {description}
+            
+Include:
+            - All necessary imports
+            - Proper route definitions
+            - Request/response models
+            - Error handling
+            - Input validation
+            - Documentation strings
+            - Example usage
+            
+Generate production-ready code."""
+            
+            with self.console.status("[bold green]Generating API...", spinner="dots"):
+                response = self.gemini_client.generate_content(prompt)
+            
+            self.console.print(Panel(Markdown(response), title="Generated API", border_style="green"))
+    
+    def generate_test(self, description: str):
+        """Generate test cases based on description"""
+        if not description:
+            description = Prompt.ask("[blue]What do you want to test?[/blue]")
+        
+        test_framework = Prompt.ask("[blue]Test framework[/blue]", default="pytest")
+        
+        if self.gemini_client:
+            prompt = f"""Generate comprehensive {test_framework} tests for: {description}
+            
+Include:
+            - Test setup and teardown
+            - Positive test cases
+            - Negative test cases
+            - Edge cases
+            - Mocking if needed
+            - Clear test documentation
+            
+Generate complete, runnable test code."""
+            
+            with self.console.status("[bold green]Generating tests...", spinner="dots"):
+                response = self.gemini_client.generate_content(prompt)
+            
+            self.console.print(Panel(Markdown(response), title="Generated Tests", border_style="green"))
+    
+    def analyze_file(self, file_path: str):
+        """Analyze the specified file for code quality, security, and improvements"""
+        try:
+            if not Path(file_path).exists():
+                self.console.print(f"[red]File not found: {file_path}[/red]")
+                return
+            
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            if not content.strip():
+                self.console.print(f"[yellow]File is empty: {file_path}[/yellow]")
+                return
+            
+            # Determine file type
+            file_ext = Path(file_path).suffix
+            language_map = {
+                '.py': 'Python',
+                '.js': 'JavaScript',
+                '.ts': 'TypeScript',
+                '.java': 'Java',
+                '.cpp': 'C++',
+                '.c': 'C',
+                '.cs': 'C#',
+                '.go': 'Go',
+                '.rs': 'Rust',
+                '.php': 'PHP'
+            }
+            
+            language = language_map.get(file_ext, 'Unknown')
+            
+            if self.gemini_client:
+                prompt = f"""Analyze this {language} code file for:
+                
+1. **Code Quality**: Structure, readability, maintainability
+2. **Performance**: Potential bottlenecks and optimizations
+3. **Security**: Vulnerabilities and security best practices
+4. **Best Practices**: Adherence to language conventions
+5. **Bugs**: Potential issues and edge cases
+6. **Improvements**: Specific recommendations
+                
+File: {file_path}
+                
+```{language.lower()}
+{content}
+```
+                
+Provide detailed analysis with specific line references where applicable."""
+                
+                with self.console.status(f"[bold green]Analyzing {file_path}...", spinner="dots"):
+                    response = self.gemini_client.analyze_code(content, language.lower(), "comprehensive")
+                
+                self.console.print(Panel(
+                    Markdown(response), 
+                    title=f"📊 Analysis Report: {file_path}", 
+                    border_style="blue"
+                ))
+                
+                # Save analysis to project data
+                if 'code_analysis' not in self.project_data:
+                    self.project_data['code_analysis'] = []
+                
+                analysis_record = {
+                    'file_path': file_path,
+                    'timestamp': datetime.now().isoformat(),
+                    'language': language,
+                    'analysis': response,
+                    'file_size': len(content)
+                }
+                
+                self.project_data['code_analysis'].append(analysis_record)
+                self._save_project_data()
+                
+        except Exception as e:
+            self.console.print(f"[red]Error analyzing file: {e}[/red]")
+    
+    def handle_test_command(self, args: List[str]):
+        """Handle testing commands"""
+        if not args:
+            self.console.print("[red]Please specify test action (generate, run, analyze)[/red]")
+            return
+        
+        action = args[0].lower()
+        target = ' '.join(args[1:]) if len(args) > 1 else ""
+        
+        if action == "generate":
+            self.generate_test(target)
+        elif action == "run":
+            self.run_tests(target)
+        elif action == "analyze":
+            self.analyze_test_coverage(target)
+        else:
+            self.console.print(f"[yellow]Unknown test action: {action}[/yellow]")
+    
+    def run_tests(self, target: str = ""):
+        """Run tests using appropriate test runner"""
+        # Detect test framework
+        test_files = list(Path('.').glob('**/test_*.py')) + list(Path('.').glob('**/*_test.py'))
+        
+        if not test_files:
+            self.console.print("[yellow]No test files found. Use '/test generate' to create tests.[/yellow]")
+            return
+        
+        # Try different test runners
+        runners = ['pytest', 'python -m pytest', 'python -m unittest']
+        
+        for runner in runners:
+            try:
+                cmd = f"{runner} {target}" if target else runner
+                result = self.execute_shell_command(cmd)
+                
+                if result['return_code'] == 0:
+                    self.console.print(f"[green]✓ Tests passed![/green]")
+                    if result['output']:
+                        self.console.print(result['output'])
+                else:
+                    self.console.print(f"[red]✗ Tests failed![/red]")
+                    if result['error']:
+                        self.console.print(f"[red]{result['error']}[/red]")
+                return
+                
+            except Exception:
+                continue
+        
+        self.console.print("[red]No suitable test runner found. Install pytest or use unittest.[/red]")
+    
+    def analyze_test_coverage(self, target: str = ""):
+        """Analyze test coverage"""
+        try:
+            # Try to run coverage analysis
+            cmd = f"coverage run -m pytest {target}" if target else "coverage run -m pytest"
+            result1 = self.execute_shell_command(cmd)
+            
+            if result1['return_code'] == 0:
+                result2 = self.execute_shell_command("coverage report")
+                if result2['output']:
+                    self.console.print(Panel(
+                        result2['output'], 
+                        title="📈 Test Coverage Report", 
+                        border_style="green"
+                    ))
+                else:
+                    self.console.print("[yellow]Coverage data available, but no report generated[/yellow]")
+            else:
+                self.console.print("[red]Failed to run coverage analysis. Install coverage: pip install coverage[/red]")
+                
+        except Exception as e:
+            self.console.print(f"[red]Error analyzing coverage: {e}[/red]")

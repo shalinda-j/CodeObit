@@ -1,0 +1,11 @@
+include README.md
+include LICENSE
+include CHANGELOG.md
+include INSTALL.md
+include CONTRIBUTING.md
+include requirements.txt
+include pyproject.toml
+recursive-include codeobit *.py
+recursive-include tests *.py
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]

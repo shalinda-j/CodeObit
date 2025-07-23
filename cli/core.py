@@ -18,6 +18,7 @@ from cli.commands.test import TestCommand
 from cli.commands.security import SecurityCommand
 from cli.commands.docs import DocsCommand
 from cli.commands.project import ProjectCommand
+from cli.commands.devops import DevOpsCommand
 from cli.commands.browse import BrowseCommand
 from cli.commands.debug import DebugCommand
 from cli.commands.qa import QACommand
@@ -37,6 +38,7 @@ class AISoftwareEngineerCLI:
             'docs': DocsCommand(),
             'project': ProjectCommand(),
             'browse': BrowseCommand(),
+            'devops': DevOpsCommand(),
             'debug': DebugCommand(),
             'qa': QACommand()
         }

@@ -82,3 +82,94 @@
 2025-07-22 13:46:25,174 - google_genai.models - INFO - AFC remote call 1 is done.
 2025-07-22 13:57:08,035 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
 2025-07-22 13:57:08,079 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-22 14:00:02,436 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-22 14:00:02,470 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-22 14:00:12,094 - cli.utils.config - INFO - Configuration saved to config\config.yaml
+2025-07-22 14:00:13,895 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-22 14:00:15,343 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-22 14:00:15,357 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-22 14:00:39,281 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-22 14:00:56,899 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-22 14:00:56,906 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-22 14:32:23,160 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-22 14:32:40,015 - cli.utils.config - INFO - Configuration saved to config\config.yaml
+2025-07-22 14:32:41,872 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-22 14:32:43,381 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-22 14:32:43,404 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-22 14:38:35,838 - root - ERROR - Unexpected error: closing tag '[/bold]' at position 25 doesn't match any open tag
+2025-07-22 14:45:55,759 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-22 14:46:03,754 - cli.utils.config - INFO - Configuration saved to config\config.yaml
+2025-07-22 14:46:05,289 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-22 14:46:06,680 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-22 14:46:06,684 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-22 14:46:36,753 - root - ERROR - Unexpected error: closing tag '[/bold]' at position 25 doesn't match any open tag
+2025-07-22 14:50:45,108 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-22 14:54:58,524 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-22 14:54:58,524 - root - ERROR - Unexpected error: asyncio.run() cannot be called from a running event loop
+2025-07-22 14:55:10,690 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-22 15:02:15,948 - cli.utils.config - INFO - Configuration saved to config\config.yaml
+2025-07-22 15:02:17,477 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-22 15:02:18,786 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-22 15:02:18,791 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-22 15:02:51,914 - root - ERROR - Unexpected error: closing tag '[/bold]' at position 25 doesn't match any open tag
+2025-07-22 15:03:13,040 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-22 15:03:13,175 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-22 15:03:21,146 - cli.utils.config - INFO - Configuration saved to config\config.yaml
+2025-07-22 15:03:22,689 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-22 15:03:23,865 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-22 15:03:23,870 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-22 15:04:18,731 - root - ERROR - Unexpected error: closing tag '[/bold]' at position 25 doesn't match any open tag
+2025-07-22 15:08:43,405 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-22 15:08:43,440 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-22 15:08:51,984 - cli.utils.config - INFO - Configuration saved to config\config.yaml
+2025-07-22 15:08:53,502 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-22 15:08:55,296 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-22 15:08:55,300 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-22 15:24:32,776 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-22 15:24:34,917 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-22 15:24:34,922 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-22 15:24:54,670 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-22 15:25:10,663 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-22 15:25:10,668 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-22 16:44:59,706 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-22 16:44:59,919 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-22 17:01:57,186 - cli.utils.config - INFO - Configuration saved to config\config.yaml
+2025-07-22 17:01:59,189 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-22 17:02:00,439 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-22 17:02:00,451 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-22 17:02:04,038 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-22 17:02:06,765 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-22 17:02:06,771 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-22 17:06:12,852 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-22 17:06:22,419 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-22 17:06:22,428 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-22 17:14:38,004 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-22 17:14:40,512 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-22 17:14:40,517 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-22 17:15:21,561 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-22 17:15:21,597 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-22 17:15:50,288 - cli.utils.config - INFO - Configuration saved to config\config.yaml
+2025-07-22 17:15:51,897 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-22 17:15:53,147 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-22 17:15:53,153 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-23 13:57:57,107 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-23 13:57:57,195 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-23 14:21:58,659 - root - ERROR - Unexpected error: unindent does not match any outer indentation level (interactive.py, line 520)
+2025-07-23 14:22:19,830 - root - ERROR - Unexpected error: unindent does not match any outer indentation level (interactive.py, line 854)
+2025-07-23 14:23:07,219 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-23 14:23:48,738 - cli.utils.config - INFO - Configuration saved to config\config.yaml
+2025-07-23 14:23:52,060 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-23 14:23:53,594 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-23 14:23:53,660 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-23 14:24:02,261 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-23 14:24:13,748 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-23 14:24:13,819 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-23 14:28:10,889 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-23 14:36:19,432 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-23 14:37:00,810 - cli.utils.config - INFO - Configuration saved to config\config.yaml
+2025-07-23 14:37:01,808 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-23 14:37:02,192 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.0 400 Bad Request"
+2025-07-23 14:37:02,195 - cli.ai.gemini_client - ERROR - Connection test failed: 400 Bad Request. {'message': '<html><title>Error 400 (Bad Request)!!1</title></html>', 'status': 'Bad Request'}
+2025-07-23 14:37:22,601 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-23 14:37:22,890 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.0 400 Bad Request"
+2025-07-23 14:37:22,892 - cli.ai.gemini_client - ERROR - Content generation failed: 400 Bad Request. {'message': '<html><title>Error 400 (Bad Request)!!1</title></html>', 'status': 'Bad Request'}

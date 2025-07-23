@@ -56,20 +56,44 @@ class ProjectCommand:
         template = args.template or "standard"
         
         console.print(f"Initializing project: {project_name}")
+
+        # AI-driven dependency analysis
+        dependencies = gemini_client.predict_dependencies(project_name, template)
+
+        # Import the new models from gemini_client
+        from cli.ai.gemini_client import ProjectPhase, ProjectTask, ProjectMilestone, TeamMember, ProjectResource
         
-        # Create project structure
+        # Create project structure with enhanced AI-driven data
         project_data = {
             "name": project_name,
             "created_date": datetime.now().isoformat(),
             "template": template,
             "status": "initialized",
-            "phases": [],
-            "tasks": [],
-            "milestones": [],
-            "team": [],
-            "resources": []
+            "phases": dependencies.get('phases', []),
+            "tasks": dependencies.get('tasks', []),
+            "milestones": dependencies.get('milestones', []),
+            "team": dependencies.get('team', []),
+            "resources": dependencies.get('resources', []),
+            "dependencies": dependencies.get('dependencies', []),
+            "risks": dependencies.get('risks', []),
+            "timeline": dependencies.get('timeline', {}),
+            "budget_estimate": dependencies.get('budget_estimate', {})
         }
         
+        # Display AI-driven project insights
+        num_phases = len(project_data.get('phases', []))
+        num_tasks = len(project_data.get('tasks', []))
+        num_milestones = len(project_data.get('milestones', []))
+        num_team = len(project_data.get('team', []))
+        num_resources = len(project_data.get('resources', []))
+        
+        # Display additional structured project information
+        console.print(f"[bold yellow]Phases:[/bold yellow] {num_phases} phases")
+        console.print(f"[bold yellow]Tasks:[/bold yellow] {num_tasks} tasks")
+        console.print(f"[bold yellow]Milestones:[/bold yellow] {num_milestones} milestones")
+        console.print(f"[bold yellow]Team:[/bold yellow] {num_team} team members")
+        console.print(f"[bold yellow]Resources:[/bold yellow] {num_resources} resources")
+
         # Save project file
         output_file = args.output or f"{project_name.lower().replace(' ', '_')}_project.json"
         file_manager.write_file(output_file, json.dumps(project_data, indent=2))
@@ -100,6 +124,13 @@ class ProjectCommand:
         
         console.print("Creating comprehensive project plan...")
         
+        # AI-driven planning
+        plan = gemini_client.generate_plan(requirements, team_size, duration)
+        console.print("AI-driven plan created. Analyzing for scheduling...")
+        
+        # Schedule prediction
+        schedule = gemini_client.predict_schedule(plan)
+
         prompt = f"""
         Create a comprehensive project plan based on these requirements:
         

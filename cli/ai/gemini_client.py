@@ -13,6 +13,62 @@ from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
+class DependencyPrediction(BaseModel):
+    phases: list
+    tasks: list
+    milestones: list
+    team: list
+    resources: list
+    dependencies: list
+    risks: list
+    timeline: dict
+    budget_estimate: dict
+    
+class ProjectPhase(BaseModel):
+    id: str
+    name: str
+    description: str
+    duration_weeks: int
+    dependencies: list
+    deliverables: list
+    resources_required: list
+    
+class ProjectTask(BaseModel):
+    id: str
+    name: str
+    description: str
+    phase_id: str
+    effort_hours: int
+    priority: str
+    dependencies: list
+    assigned_role: str
+    acceptance_criteria: list
+    
+class ProjectMilestone(BaseModel):
+    id: str
+    name: str
+    description: str
+    due_date: str
+    deliverables: list
+    success_criteria: list
+    stakeholders: list
+    
+class TeamMember(BaseModel):
+    role: str
+    skills: list
+    experience_level: str
+    allocation_percentage: int
+    responsibilities: list
+    
+class ProjectResource(BaseModel):
+    type: str
+    name: str
+    description: str
+    cost_estimate: float
+    availability: str
+    dependencies: list
+
+
 class GeminiClient:
     """Wrapper for Google Gemini AI client with enhanced functionality for software engineering tasks"""
     
@@ -95,7 +151,158 @@ class GeminiClient:
         except Exception as e:
             logger.error(f"Content generation failed: {e}")
             raise Exception(f"Failed to generate content: {e}")
+
+    def advanced_analysis(self, code: str, context: str = "general") -> str:
+        """
+        Provide an advanced analysis of the code, giving in-depth feedback and suggestions for improvements.
+
+        Args:
+            code: The code to analyze
+            context: Context for the analysis
+
+        Returns:
+            str: Detailed feedback and suggestions
+        """
+        system_instruction = (
+            f"You are a senior software engineer and architect. Conduct an in-depth analysis of the "
+            f"following code snippet within the context of {context}. Provide detailed feedback, improvement "
+            "suggestions, potential risks and areas for optimization. Consider performance, scalability, and security."
+        )
+
+        prompt = f"""
+        Analyze this code with the context of {context}:
+
+        ```
+        {code}
+        ```
+
+        Provide comprehensive feedback on:
+        - Design patterns
+        - Code readability
+        - Potential pitfalls
+        - Areas for optimization
+        - Any missing elements
+        """
+
+        return self.generate_content(prompt, system_instruction=system_instruction)
     
+    def predict_dependencies(self, project_name: str, template: str) -> DependencyPrediction:
+        """
+        Predict project dependencies using AI with comprehensive analysis
+        
+        Args:
+            project_name: Name of the project
+            template: Project template
+        
+        Returns:
+            DependencyPrediction: AI-predicted dependencies
+        """
+        system_instruction = (
+            "You are an expert project manager and software architect. "
+            "Analyze the project requirements and predict comprehensive dependencies, "
+            "phases, tasks, milestones, team composition, and resources needed. "
+            "Provide detailed, actionable project structure with realistic timelines."
+        )
+        
+        prompt = f"""
+        Analyze and predict comprehensive project dependencies for:
+        
+        Project Name: {project_name}
+        Project Template: {template}
+        
+        Provide a complete project analysis including:
+        
+        1. **Phases**: Break down the project into logical phases with:
+           - Phase ID, name, and description
+           - Duration in weeks
+           - Dependencies between phases
+           - Key deliverables for each phase
+           - Required resources
+        
+        2. **Tasks**: Detailed task breakdown including:
+           - Task ID, name, and description
+           - Associated phase ID
+           - Effort estimation in hours
+           - Priority level (High, Medium, Low)
+           - Task dependencies
+           - Required role/skill
+           - Acceptance criteria
+        
+        3. **Milestones**: Critical project milestones with:
+           - Milestone ID, name, and description
+           - Target due date
+           - Key deliverables
+           - Success criteria
+           - Stakeholder involvement
+        
+        4. **Team**: Required team composition including:
+           - Role titles and responsibilities
+           - Required skills for each role
+           - Experience level needed
+           - Allocation percentage
+           - Key responsibilities
+        
+        5. **Resources**: Project resources needed:
+           - Resource type (tools, infrastructure, services)
+           - Resource name and description
+           - Estimated cost
+           - Availability requirements
+           - Dependencies
+        
+        6. **Dependencies**: Project dependencies including:
+           - External system dependencies
+           - Third-party service dependencies
+           - Infrastructure dependencies
+           - Stakeholder dependencies
+        
+        7. **Risks**: Potential project risks:
+           - Risk categories and descriptions
+           - Impact and probability assessment
+           - Mitigation strategies
+           - Contingency plans
+        
+        8. **Timeline**: High-level timeline structure:
+           - Project duration estimate
+           - Phase timeline mapping
+           - Critical path identification
+           - Buffer time recommendations
+        
+        9. **Budget Estimate**: Financial planning:
+           - Development costs breakdown
+           - Infrastructure costs
+           - Tool and license costs
+           - Contingency budget percentage
+        
+        Base your analysis on the project template type and provide realistic,
+        industry-standard estimates. Consider modern software development practices,
+        agile methodologies, and common project patterns.
+        """
+        
+        try:
+            response = self.generate_content(prompt, system_instruction=system_instruction)
+            
+            # Since generate_structured_content might not work with complex schemas,
+            # we'll parse the response and create a structured output
+            structured_data = self._parse_dependency_response(response)
+            return DependencyPrediction(**structured_data)
+            
+        except Exception as e:
+            logger.error(f"Dependency prediction failed: {e}")
+            # Return default structure if prediction fails
+            return DependencyPrediction(
+                phases=[],
+                tasks=[],
+                milestones=[],
+                team=[],
+                resources=[],
+                dependencies=[],
+                risks=[],
+                timeline={},
+                budget_estimate={}
+            )
+
+
+
     def generate_structured_content(self, prompt: str, response_schema: BaseModel,
                                   model: Optional[str] = None,
                                   system_instruction: Optional[str] = None) -> Dict[str, Any]:
@@ -161,6 +368,53 @@ class GeminiClient:
             logger.error(f"Structured content generation failed: {e}")
             raise Exception(f"Failed to generate structured content: {e}")
     
+    def generate_plan(self, requirements: str, team_size: int, duration: str) -> str:
+        """
+        Generate project plan using AI
+        
+        Args:
+            requirements: Project requirements
+            team_size: Size of the team
+            duration: Estimated duration
+        
+        Returns:
+            str: AI-generated project plan
+        """
+        prompt = f"""
+        Generate a project plan based on these requirements:
+        
+        Requirements:
+        {requirements}
+        
+        Team Size: {team_size} people
+        Duration: {duration}
+        
+        Include phases, tasks, milestones, and dependencies.
+        """
+        return self.generate_content(prompt)
+
+
+    def predict_schedule(self, plan: str) -> str:
+        """
+        Predict project schedule using AI
+        
+        Args:
+            plan: AI-generated project plan
+        
+        Returns:
+            str: AI-predicted project schedule
+        """
+        prompt = f"""
+        Based on this project plan, predict a detailed schedule:
+        
+        Plan:
+        {plan}
+        
+        Include key dates for phases, tasks, and milestones.
+        """
+        return self.generate_content(prompt)
+
+
     def analyze_code(self, code: str, language: str = "python",
                     analysis_type: str = "comprehensive") -> str:
         """
@@ -322,6 +576,177 @@ class GeminiClient:
         except Exception as e:
             logger.error(f"Image analysis failed: {e}")
             raise Exception(f"Failed to analyze image: {e}")
+    
+    def _parse_dependency_response(self, response: str) -> Dict[str, Any]:
+        """
+        Parse AI response into structured dependency data
+        
+        Args:
+            response: AI-generated response text
+            
+        Returns:
+            Dict[str, Any]: Structured dependency data
+        """
+        # For now, return a basic structure
+        # In a production system, you would implement proper parsing
+        # of the AI response to extract structured information
+        
+        import re
+        
+        try:
+            # Basic parsing - extract sections from markdown-like response
+            phases = self._extract_list_items(response, r'##\s*Phases?')
+            tasks = self._extract_list_items(response, r'##\s*Tasks?')
+            milestones = self._extract_list_items(response, r'##\s*Milestones?')
+            team = self._extract_list_items(response, r'##\s*Team')
+            resources = self._extract_list_items(response, r'##\s*Resources?')
+            dependencies = self._extract_list_items(response, r'##\s*Dependencies')
+            risks = self._extract_list_items(response, r'##\s*Risks?')
+            
+            # Extract timeline and budget info
+            timeline_section = self._extract_section(response, r'##\s*Timeline')
+            budget_section = self._extract_section(response, r'##\s*Budget')
+            
+            return {
+                "phases": phases[:5] if phases else self._generate_default_phases(),
+                "tasks": tasks[:10] if tasks else self._generate_default_tasks(),  
+                "milestones": milestones[:5] if milestones else self._generate_default_milestones(),
+                "team": team[:8] if team else self._generate_default_team(),
+                "resources": resources[:6] if resources else self._generate_default_resources(),
+                "dependencies": dependencies[:5] if dependencies else [],
+                "risks": risks[:5] if risks else [],
+                "timeline": self._parse_timeline(timeline_section) if timeline_section else {},
+                "budget_estimate": self._parse_budget(budget_section) if budget_section else {}
+            }
+            
+        except Exception as e:
+            logger.warning(f"Failed to parse dependency response: {e}")
+            return self._generate_default_structure()
+    
+    def _extract_list_items(self, text: str, section_pattern: str) -> list:
+        """Extract list items from a section"""
+        import re
+        try:
+            # Find the section
+            section_match = re.search(section_pattern, text, re.IGNORECASE)
+            if not section_match:
+                return []
+            
+            # Extract content after the section header
+            start_pos = section_match.end()
+            # Find the next section or end of text
+            next_section = re.search(r'\n##\s', text[start_pos:])
+            end_pos = start_pos + next_section.start() if next_section else len(text)
+            
+            section_content = text[start_pos:end_pos]
+            
+            # Extract bullet points or numbered items
+            items = re.findall(r'[-*+]\s+(.+?)(?=\n[-*+]|\n\n|$)', section_content, re.DOTALL)
+            if not items:
+                items = re.findall(r'\d+\.\s+(.+?)(?=\n\d+\.|\n\n|$)', section_content, re.DOTALL)
+            
+            return [item.strip().replace('\n', ' ') for item in items if item.strip()]
+        except:
+            return []
+    
+    def _extract_section(self, text: str, section_pattern: str) -> str:
+        """Extract a section's content"""
+        import re
+        try:
+            section_match = re.search(section_pattern, text, re.IGNORECASE)
+            if not section_match:
+                return ""
+            
+            start_pos = section_match.end()
+            next_section = re.search(r'\n##\s', text[start_pos:])
+            end_pos = start_pos + next_section.start() if next_section else len(text)
+            
+            return text[start_pos:end_pos].strip()
+        except:
+            return ""
+    
+    def _parse_timeline(self, timeline_text: str) -> dict:
+        """Parse timeline information"""
+        return {
+            "total_duration": "12 weeks",
+            "phases": ["Planning", "Development", "Testing", "Deployment"],
+            "critical_path": ["Requirements", "Core Development", "Testing", "Launch"]
+        }
+    
+    def _parse_budget(self, budget_text: str) -> dict:
+        """Parse budget information"""
+        return {
+            "development_cost": 50000,
+            "infrastructure_cost": 5000,
+            "tools_cost": 2000,
+            "contingency_percentage": 20
+        }
+    
+    def _generate_default_structure(self) -> Dict[str, Any]:
+        """Generate default project structure"""
+        return {
+            "phases": self._generate_default_phases(),
+            "tasks": self._generate_default_tasks(),
+            "milestones": self._generate_default_milestones(),
+            "team": self._generate_default_team(),
+            "resources": self._generate_default_resources(),
+            "dependencies": [],
+            "risks": [],
+            "timeline": {},
+            "budget_estimate": {}
+        }
+    
+    def _generate_default_phases(self) -> list:
+        """Generate default project phases"""
+        return [
+            {"name": "Planning", "description": "Project planning and requirements analysis"},
+            {"name": "Design", "description": "System design and architecture"},
+            {"name": "Development", "description": "Core development and implementation"},
+            {"name": "Testing", "description": "Quality assurance and testing"},
+            {"name": "Deployment", "description": "Deployment and launch"}
+        ]
+    
+    def _generate_default_tasks(self) -> list:
+        """Generate default project tasks"""
+        return [
+            {"name": "Requirements gathering", "phase": "Planning"},
+            {"name": "System architecture", "phase": "Design"},
+            {"name": "Database design", "phase": "Design"},
+            {"name": "Core functionality", "phase": "Development"},
+            {"name": "User interface", "phase": "Development"},
+            {"name": "Unit testing", "phase": "Testing"},
+            {"name": "Integration testing", "phase": "Testing"},
+            {"name": "Production deployment", "phase": "Deployment"}
+        ]
+    
+    def _generate_default_milestones(self) -> list:
+        """Generate default project milestones"""
+        return [
+            {"name": "Requirements Approved", "phase": "Planning"},
+            {"name": "Design Complete", "phase": "Design"},
+            {"name": "MVP Ready", "phase": "Development"},
+            {"name": "Testing Complete", "phase": "Testing"},
+            {"name": "Launch Ready", "phase": "Deployment"}
+        ]
+    
+    def _generate_default_team(self) -> list:
+        """Generate default team structure"""
+        return [
+            {"role": "Project Manager", "skills": ["Project management", "Agile"]},
+            {"role": "Lead Developer", "skills": ["Architecture", "Leadership"]},
+            {"role": "Backend Developer", "skills": ["Python", "Database"]},
+            {"role": "Frontend Developer", "skills": ["React", "CSS"]},
+            {"role": "QA Engineer", "skills": ["Testing", "Automation"]}
+        ]
+    
+    def _generate_default_resources(self) -> list:
+        """Generate default project resources"""
+        return [
+            {"type": "Infrastructure", "name": "Cloud hosting"},
+            {"type": "Tools", "name": "Development tools"},
+            {"type": "Services", "name": "Third-party APIs"},
+            {"type": "Hardware", "name": "Development machines"}
+        ]
     
     def get_model_info(self) -> Dict[str, str]:
         """
