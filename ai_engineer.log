@@ -183,3 +183,12 @@
 2025-07-23 15:34:37,998 - google_genai.models - INFO - AFC remote call 1 is done.
 2025-07-23 15:34:38,000 - cli.utils.auto_save - INFO - Auto-save started with 30s interval
 2025-07-23 15:34:38,003 - cli.utils.auto_save - INFO - Auto-saved code_gen_test_generated_1753265077 to D:\AGENT\codeobit-v1\.codeobit\autosave\code_gen_test_generated_1753265077_20250723_153438.auto
+2025-07-23 16:00:39,347 - root - ERROR - Unexpected error: 'Group' object has no attribute 'add_parser'
+2025-07-23 16:02:52,255 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-23 16:02:52,257 - cli.database.manager - INFO - Connected to SQLite database: D:\AGENT\codeobit-v1\.codeobit\database\codeobit.db
+2025-07-23 16:02:52,258 - cli.database.manager - INFO - SQL tables created successfully
+2025-07-23 16:03:00,630 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-23 16:03:00,635 - cli.database.manager - INFO - Connected to SQLite database: D:\AGENT\codeobit-v1\.codeobit\database\codeobit.db
+2025-07-23 16:03:00,636 - cli.database.manager - INFO - SQL tables created successfully
+2025-07-23 16:08:25,067 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-23 16:08:26,631 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.

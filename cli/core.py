@@ -22,6 +22,7 @@ from cli.commands.devops import DevOpsCommand
 from cli.commands.browse import BrowseCommand
 from cli.commands.debug import DebugCommand
 from cli.commands.qa import QACommand
+from cli.commands.database import DatabaseCommand
 
 class AISoftwareEngineerCLI:
     """Main CLI application class"""
@@ -40,7 +41,8 @@ class AISoftwareEngineerCLI:
             'browse': BrowseCommand(),
             'devops': DevOpsCommand(),
             'debug': DebugCommand(),
-            'qa': QACommand()
+            'qa': QACommand(),
+            'database': DatabaseCommand()
         }
     
     def create_parser(self):
@@ -122,7 +124,8 @@ class AISoftwareEngineerCLI:
             'project': 'Project planning with data collection and memory',
             'browse': 'Collect web data and save to project memory',
             'debug': 'Advanced debugging with AI assistance',
-            'qa': 'Quality assurance automation and testing'
+            'qa': 'Quality assurance automation and testing',
+            'database': 'Database management, migrations, and backups'
         }
         
         for cmd, desc in commands_info.items():

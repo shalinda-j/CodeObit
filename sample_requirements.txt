@@ -1,0 +1,1 @@
+Create a modern task management application with user authentication, project creation, task assignment, real-time updates, file attachments, and team collaboration features. Include a responsive web frontend and a robust REST API backend.
