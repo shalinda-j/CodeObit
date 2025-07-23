@@ -173,3 +173,13 @@
 2025-07-23 14:37:22,601 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
 2025-07-23 14:37:22,890 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.0 400 Bad Request"
 2025-07-23 14:37:22,892 - cli.ai.gemini_client - ERROR - Content generation failed: 400 Bad Request. {'message': '<html><title>Error 400 (Bad Request)!!1</title></html>', 'status': 'Bad Request'}
+2025-07-23 15:29:55,033 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-23 15:29:57,283 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-23 15:29:57,669 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.0 400 Bad Request"
+2025-07-23 15:29:57,670 - cli.ai.gemini_client - ERROR - Content generation failed: 400 Bad Request. {'message': '<html><title>Error 400 (Bad Request)!!1</title></html>', 'status': 'Bad Request'}
+2025-07-23 15:33:54,427 - cli.utils.config - INFO - Configuration loaded from config\config.yaml
+2025-07-23 15:33:55,980 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-23 15:34:37,984 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-23 15:34:37,998 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-23 15:34:38,000 - cli.utils.auto_save - INFO - Auto-save started with 30s interval
+2025-07-23 15:34:38,003 - cli.utils.auto_save - INFO - Auto-saved code_gen_test_generated_1753265077 to D:\AGENT\codeobit-v1\.codeobit\autosave\code_gen_test_generated_1753265077_20250723_153438.auto

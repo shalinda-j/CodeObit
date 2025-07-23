@@ -66,14 +66,17 @@ class FileManager:
             logger.error(f"Failed to read file {file_path}: {e}")
             raise
     
-    def write_file(self, file_path: str, content: str, create_dirs: bool = True) -> None:
+    def write_file(self, file_path: str, content: str, create_dirs: bool = True, 
+                   auto_backup: bool = True, encoding: str = 'utf-8') -> None:
         """
-        Write content to a file
+        Write content to a file with enhanced features
         
         Args:
             file_path: Path to the file to write
             content: Content to write
             create_dirs: Create parent directories if they don't exist
+            auto_backup: Create backup of existing file before overwriting
+            encoding: File encoding (default: utf-8)
             
         Raises:
             Exception: If file writing fails
@@ -86,13 +89,40 @@ class FileManager:
             if create_dirs:
                 self.ensure_directory(path.parent)
             
-            with open(path, 'w', encoding='utf-8') as f:
+            # Create backup if file exists and auto_backup is enabled
+            if auto_backup and path.exists():
+                try:
+                    backup_path = self._create_timestamped_backup(path)
+                    logger.info(f"Created backup: {backup_path}")
+                except Exception as backup_error:
+                    logger.warning(f"Failed to create backup: {backup_error}")
+            
+            # Write content to temporary file first for atomicity
+            temp_path = path.with_suffix(path.suffix + '.tmp')
+            with open(temp_path, 'w', encoding=encoding) as f:
                 f.write(content)
+                f.flush()  # Ensure content is written
+                os.fsync(f.fileno())  # Force write to disk
+            
+            # Atomically replace original file
+            if os.name == 'nt':  # Windows
+                if path.exists():
+                    path.unlink()
+                temp_path.rename(path)
+            else:  # Unix/Linux
+                temp_path.replace(path)
                 
-            logger.info(f"Successfully wrote file: {path}")
+            logger.info(f"Successfully wrote file: {path} ({len(content)} characters)")
             
         except Exception as e:
             logger.error(f"Failed to write file {file_path}: {e}")
+            # Clean up temp file if it exists
+            temp_path = Path(file_path).with_suffix('.tmp')
+            if temp_path.exists():
+                try:
+                    temp_path.unlink()
+                except:
+                    pass
             raise
     
     def read_json(self, file_path: str) -> Dict[str, Any]:
@@ -389,3 +419,99 @@ class FileManager:
                 filtered_files.append(file_path)
         
         return filtered_files
+    
+    def _create_timestamped_backup(self, file_path: Path) -> Path:
+        """
+        Create a timestamped backup of a file
+        
+        Args:
+            file_path: Path object of file to backup
+            
+        Returns:
+            Path: Path to created backup file
+        """
+        from datetime import datetime
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_path = file_path.with_suffix(f".{timestamp}{file_path.suffix}.backup")
+        
+        import shutil
+        shutil.copy2(file_path, backup_path)
+        
+        return backup_path
+    
+    def auto_save_enabled(self) -> bool:
+        """
+        Check if auto-save is enabled globally
+        
+        Returns:
+            bool: True if auto-save is enabled
+        """
+        # Could be made configurable via config
+        return True
+    
+    def write_file_safe(self, file_path: str, content: str, **kwargs) -> bool:
+        """
+        Safe file write with error handling and return status
+        
+        Args:
+            file_path: Path to the file to write
+            content: Content to write
+            **kwargs: Additional arguments for write_file
+            
+        Returns:
+            bool: True if write successful, False otherwise
+        """
+        try:
+            self.write_file(file_path, content, **kwargs)
+            return True
+        except Exception as e:
+            logger.error(f"Safe write failed for {file_path}: {e}")
+            return False
+    
+    def get_backup_files(self, file_path: str) -> List[str]:
+        """
+        Get list of backup files for a given file
+        
+        Args:
+            file_path: Original file path
+            
+        Returns:
+            List[str]: List of backup file paths
+        """
+        try:
+            path = Path(file_path)
+            if not path.is_absolute():
+                path = self.base_path / path
+            
+            parent_dir = path.parent
+            base_name = path.stem
+            
+            # Look for backup files
+            backup_pattern = f"{base_name}.*{path.suffix}.backup"
+            backup_files = list(parent_dir.glob(backup_pattern))
+            
+            return [str(f.relative_to(self.base_path)) for f in backup_files]
+            
+        except Exception as e:
+            logger.error(f"Failed to get backup files for {file_path}: {e}")
+            return []
+    
+    def restore_from_backup(self, original_path: str, backup_path: str) -> bool:
+        """
+        Restore file from backup
+        
+        Args:
+            original_path: Path to original file
+            backup_path: Path to backup file
+            
+        Returns:
+            bool: True if restore successful
+        """
+        try:
+            self.copy_file(backup_path, original_path)
+            logger.info(f"Restored {original_path} from backup {backup_path}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to restore {original_path} from {backup_path}: {e}")
+            return False

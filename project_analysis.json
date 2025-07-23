@@ -1,0 +1,184 @@
+{
+  "timestamp": "2025-07-23T15:35:19.654708",
+  "project_path": "D:\\AGENT\\codeobit-v1",
+  "project_type": "python",
+  "structure": {
+    "total_files": 70,
+    "directories": [
+      ".codeobit",
+      "attached_assets",
+      "cli",
+      "codeobit.egg-info",
+      "config",
+      "templates",
+      ".codeobit\\autosave",
+      "cli\\ai",
+      "cli\\commands",
+      "cli\\integrations",
+      "cli\\models",
+      "cli\\utils",
+      "cli\\web",
+      "cli\\web\\controllers",
+      "cli\\web\\models",
+      "cli\\web\\presenters"
+    ],
+    "file_types": {
+      ".log": 1,
+      ".md": 7,
+      ".py": 42,
+      ".in": 1,
+      ".json": 3,
+      ".toml": 1,
+      ".txt": 8,
+      ".lock": 1,
+      ".png": 1,
+      ".yaml": 1,
+      ".auto": 1
+    },
+    "size_mb": 2.65,
+    "key_files": {
+      "LICENSE": "LICENSE",
+      "README.md": "README.md",
+      "requirements.txt": "requirements.txt"
+    },
+    "structure_quality": "good"
+  },
+  "dependencies": {
+    "python": [
+      {
+        "name": "beautifulsoup4",
+        "version": "4.13.4",
+        "source": "requirements.txt",
+        "installed": false
+      },
+      {
+        "name": "click",
+        "version": "8.2.1",
+        "source": "requirements.txt",
+        "installed": true
+      },
+      {
+        "name": "google-genai",
+        "version": "1.26.0",
+        "source": "requirements.txt",
+        "installed": false
+      },
+      {
+        "name": "pyyaml",
+        "version": "6.0.2",
+        "source": "requirements.txt",
+        "installed": false
+      },
+      {
+        "name": "requests",
+        "version": "2.32.4",
+        "source": "requirements.txt",
+        "installed": true
+      },
+      {
+        "name": "rich",
+        "version": "14.0.0",
+        "source": "requirements.txt",
+        "installed": true
+      },
+      {
+        "name": "selenium",
+        "version": "4.34.2",
+        "source": "requirements.txt",
+        "installed": true
+      },
+      {
+        "name": "setuptools",
+        "version": "61.0",
+        "source": "pyproject.toml",
+        "installed": true
+      },
+      {
+        "name": "wheel",
+        "version": null,
+        "source": "pyproject.toml",
+        "installed": false
+      },
+      {
+        "name": "beautifulsoup4",
+        "version": "4.13.4",
+        "source": "pyproject.toml",
+        "installed": false
+      },
+      {
+        "name": "click",
+        "version": "8.2.1",
+        "source": "pyproject.toml",
+        "installed": true
+      },
+      {
+        "name": "google-genai",
+        "version": "1.26.0",
+        "source": "pyproject.toml",
+        "installed": false
+      },
+      {
+        "name": "pyyaml",
+        "version": "6.0.2",
+        "source": "pyproject.toml",
+        "installed": false
+      },
+      {
+        "name": "requests",
+        "version": "2.32.4",
+        "source": "pyproject.toml",
+        "installed": true
+      },
+      {
+        "name": "rich",
+        "version": "14.0.0",
+        "source": "pyproject.toml",
+        "installed": true
+      },
+      {
+        "name": "selenium",
+        "version": "4.34.2",
+        "source": "pyproject.toml",
+        "installed": true
+      }
+    ],
+    "node": [],
+    "system": [
+      {
+        "name": "git",
+        "type": "system",
+        "required": true,
+        "installed": true
+      }
+    ],
+    "summary": {
+      "total": 17,
+      "installed": 10,
+      "missing": 7
+    },
+    "security_issues": [],
+    "outdated": []
+  },
+  "build_config": "BuildConfiguration(build_tool='pip', entry_point=None, scripts={}, environment={}, requirements_files=['requirements.txt'], build_commands=['pip install -e .'], test_commands=[])",
+  "code_metrics": {
+    "lines_of_code": 0,
+    "complexity": 0,
+    "duplication": 0,
+    "test_coverage": 0,
+    "documentation": 0,
+    "files_analyzed": 0,
+    "languages": {},
+    "python_files": 2219,
+    "functions": 28283,
+    "classes": 9322
+  },
+  "health": "ProjectHealth(score=100, issues=[], warnings=[], recommendations=[], dependencies_status='good', build_status='unknown', test_coverage=0.0, code_quality=75.0, security_score=80.0)",
+  "recommendations": [
+    "Add a tests directory with unit tests",
+    "Add .gitignore file for Python projects",
+    "Set up continuous integration (CI/CD)",
+    "Add code formatting and linting tools",
+    "Implement automated testing",
+    "Add security scanning to development workflow"
+  ]
+}

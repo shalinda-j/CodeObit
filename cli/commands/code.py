@@ -3,6 +3,7 @@ Code generation and analysis commands
 """
 
 import os
+import time
 from pathlib import Path
 from rich.panel import Panel
 from rich.markdown import Markdown
@@ -10,6 +11,7 @@ from rich.syntax import Syntax
 
 from cli.ai.gemini_client import GeminiClient
 from cli.utils.file_manager import FileManager
+from cli.utils.auto_save import auto_save_code, get_auto_save_manager
 
 class CodeCommand:
     """Handle code generation and analysis"""
@@ -95,6 +97,29 @@ class CodeCommand:
         try:
             generated_code = gemini_client.generate_content(prompt)
             
+            # Prepare output file
+            output_file = args.output or f"generated_code.{self.get_file_extension(language)}"
+            
+            # Set up auto-save immediately - ensures code is never lost
+            save_id = f"code_gen_{Path(output_file).stem}_{int(time.time())}"
+            auto_save_code(save_id, generated_code, output_file, {
+                "language": language,
+                "framework": framework,
+                "pattern": pattern,
+                "specification": specification[:200] + "..." if len(specification) > 200 else specification
+            })
+            
+            # Immediately save to ensure no data loss
+            auto_save_manager = get_auto_save_manager()
+            success = auto_save_manager.save_immediately(save_id)
+            
+            if success:
+                console.print(f"[green]✓ Code saved immediately to: {output_file}[/green]")
+            else:
+                # Fallback to regular file save
+                file_manager.write_file(output_file, generated_code)
+                console.print(f"[yellow]⚠ Code saved via fallback to: {output_file}[/yellow]")
+            
             # Display code with syntax highlighting
             try:
                 # Try to extract code blocks for syntax highlighting
@@ -128,10 +153,8 @@ class CodeCommand:
                 panel = Panel(Markdown(generated_code), title="Generated Code", border_style="green")
                 console.print(panel)
             
-            # Save code
-            output_file = args.output or f"generated_code.{self.get_file_extension(language)}"
-            file_manager.write_file(output_file, generated_code)
-            console.print(f"[green]Code saved to: {output_file}[/green]")
+            # Show auto-save info
+            console.print(f"[dim]Auto-save ID: {save_id} | Backup created: {output_file}[/dim]")
             
         except Exception as e:
             console.print(f"[red]Code generation failed: {e}[/red]")
