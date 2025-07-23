@@ -24,7 +24,7 @@ from rich.markdown import Markdown
 from rich.syntax import Syntax
 from rich.progress import Progress
 
-from cli.ai.gemini_client import GeminiClient
+from cli.ai.multi_provider import get_provider_manager
 from cli.utils.config import ConfigManager
 from cli.utils.file_manager import FileManager
 
@@ -41,7 +41,7 @@ class InteractiveCLI:
         self.console = Console()
         self.config_manager = ConfigManager()
         self.file_manager = FileManager()
-        self.gemini_client = None
+        self.provider_manager = get_provider_manager()
         self.session_history = []
         self.color_theme = "auto"
         self.project_data = self._load_project_data()
@@ -59,7 +59,7 @@ class InteractiveCLI:
         """Start interactive CLI session"""
         try:
             self.show_welcome()
-            self.setup_gemini()
+            self.setup_providers()
             self.main_loop()
         except KeyboardInterrupt:
             self.console.print("\n[yellow]Session ended by user[/yellow]")
@@ -141,44 +141,30 @@ class InteractiveCLI:
         self.console.print(welcome_panel)
         self.console.print(tips)
     
-    def setup_gemini(self):
-        """Setup and authenticate Gemini API"""
-        try:
-            config = self.config_manager.load_config()
-            api_key = os.getenv('GEMINI_API_KEY')
-            
-            if config and 'api_key' in config:
-                api_key = api_key or config['api_key']
-            
-            if not api_key:
-                self.console.print("[yellow]API key not found. Let's set it up![/yellow]")
-                api_key = Prompt.ask(
-                    "[blue]Enter your Gemini API key[/blue]",
-                    password=True
-                )
-                
-                # Save API key to config
-                if config is None:
-                    config = {}
-                config['api_key'] = api_key
-                self.config_manager.save_config(config)
-                os.environ['GEMINI_API_KEY'] = api_key
-            
-            # Initialize Gemini client
-            self.gemini_client = GeminiClient()
-            
-            # Test connection
+    def setup_providers(self):
+        """Setup and authenticate multiple AI providers"""
+        
+        available_providers = self.provider_manager.list_providers()
+        if not available_providers:
+            self.console.print("[red]No AI providers configured[/red]")
+            return
+        
+        self.console.print("Available AI Providers:")
+        for provider in available_providers:
+            status = "(Active)" if provider['active'] else ""
+            self.console.print(f"- {provider['display_name']} {status}")
+        
+        # Test connection of the current provider
+        current_provider = self.provider_manager.get_current_provider()
+        if current_provider:
             with Live(Spinner("dots", "Testing connection..."), console=self.console):
-                test_response = self.gemini_client.test_connection()
-                
-            if test_response:
-                self.console.print("[green]✓ Connected to Gemini successfully![/green]")
+                success = current_provider.test_connection()
+            if success:
+                self.console.print(f"[green]✓ Connected to {current_provider.name} successfully![/green]")
             else:
-                self.console.print("[red]✗ Failed to connect to Gemini[/red]")
-                
-        except Exception as e:
-            self.console.print(f"[red]Setup failed: {e}[/red]")
-            sys.exit(1)
+                self.console.print(f"[red]✗ Failed to connect to {current_provider.name}[/red]")
+        else:
+            self.console.print("[red]No active AI provider found[/red]")
     
     def main_loop(self):
         """Main interactive chat loop with enhanced project management"""
@@ -199,7 +185,7 @@ class InteractiveCLI:
                     continue
                 
                 # Handle shell commands (start with ! or are common shell commands)
-                if user_input.startswith('!') or user_input.split()[0].lower() in ['cd', 'ls', 'dir', 'pwd', 'cat', 'echo', 'type', 'cls']:
+                if user_input.startswith('!') or user_input.split()[0].lower() in ['cd', 'ls', 'dir', 'pwd', 'cat', 'echo', 'type', 'cls', 'ls']:
                     cmd = user_input[1:] if user_input.startswith('!') else user_input
                     result = self.execute_shell_command(cmd)
                     
@@ -207,6 +193,8 @@ class InteractiveCLI:
                     if sys.platform == 'win32' and not result['output'] and not result['error']:
                         if cmd.lower() == 'pwd':
                             result['output'] = os.getcwd()
+                        elif cmd.lower() == 'ls':
+                            result['output'] = subprocess.getoutput('dir')
                     
                     # Display command output
                     if result['output']:
@@ -460,9 +448,10 @@ class InteractiveCLI:
     
     def _summarize_web_content(self, title: str, content: str) -> str:
         """Generate a summary of web content using AI"""
-        if not self.gemini_client:
+        provider = self.provider_manager.get_current_provider()
+        if not provider:
             return "[yellow]AI client not available. Could not generate summary.[/yellow]"
-        
+
         prompt = f"""Please summarize the following web content in a concise way, focusing on key points 
         that would be useful for a software development project. Include any technical details, 
         best practices, or important concepts mentioned.
@@ -472,9 +461,9 @@ class InteractiveCLI:
         Content:
         {content}
         """
-        
+
         try:
-            return self.gemini_client.generate_content(prompt)
+            return provider.generate_content(prompt)
         except Exception as e:
             return f"[yellow]Could not generate summary: {str(e)}[/yellow]"
     
@@ -504,7 +493,12 @@ class InteractiveCLI:
         """Handle real-time feedback and collaboration"""
         try:
             self.console.print("[blue]Collecting feedback...[/blue]")
-            response = self.gemini_client.generate_content(
+            provider = self.provider_manager.get_current_provider()
+            if not provider:
+                self.console.print("[red]No active AI provider available[/red]")
+                return
+                
+            response = provider.generate_content(
                 f"Collaborate and improve the project based on this feedback: {feedback}",
                 system_instruction=(
                     "You are a collaborative AI assistant. Process this feedback for the project "
@@ -873,10 +867,11 @@ class InteractiveCLI:
             return self.handle_docs_request(request)
         else:
             # General AI conversation
-            if self.gemini_client:
-                return self.gemini_client.generate_content(request)
+            provider = self.provider_manager.get_current_provider()
+            if provider:
+                return provider.generate_content(request)
             else:
-                return "Error: Gemini client not initialized"
+                return "Error: No active AI provider available"
     
     def handle_requirements_request(self, request: str) -> str:
         """Handle requirements-related requests"""
@@ -884,19 +879,21 @@ class InteractiveCLI:
             "You are a business analyst expert. Help create detailed software requirements "
             "including user stories, acceptance criteria, and functional specifications."
         )
-        if self.gemini_client:
-            return self.gemini_client.generate_content(request, system_instruction=system_instruction)
-        return "Error: Gemini client not initialized"
-    
+        provider = self.provider_manager.get_current_provider()
+        if provider:
+            response = provider.generate_content(request, system_instruction=system_instruction)
+            return response
+        return "Error: No active AI provider available"
     def handle_design_request(self, request: str) -> str:
         """Handle design-related requests"""
         system_instruction = (
             "You are a software architect. Help create system designs, architecture diagrams, "
             "and technical specifications. Focus on scalability, maintainability, and best practices."
         )
-        if self.gemini_client:
-            return self.gemini_client.generate_content(request, system_instruction=system_instruction)
-        return "Error: Gemini client not initialized"
+        provider = self.provider_manager.get_current_provider()
+        if provider:
+            return provider.generate_content(request, system_instruction=system_instruction)
+        return "Error: No active AI provider available"
     
     def handle_code_request(self, request: str) -> str:
         """Handle code-related requests"""

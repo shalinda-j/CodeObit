@@ -252,7 +252,7 @@ class AutoSaveManager:
             filename = f"{save_id}_{timestamp}.auto"
             auto_save_path = self.auto_save_dir / filename
             
-            # Save content
+            # Save content to auto-save location
             with open(auto_save_path, 'w', encoding='utf-8') as f:
                 f.write(item["content"])
             
@@ -266,26 +266,37 @@ class AutoSaveManager:
                 "size": len(item["content"])
             })
             
-            # Save to actual file if callback exists
+            # ALWAYS save to the target file path
+            target_file_path = Path(item["file_path"])
+            
+            # Handle absolute vs relative paths properly
+            if not target_file_path.is_absolute():
+                target_file_path = self.base_path / target_file_path
+            
+            # Ensure target directory exists
+            target_file_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Save to target file with callback or direct write
             save_type = item["save_type"]
             if save_type in self._save_callbacks:
                 try:
-                    self._save_callbacks[save_type](item["file_path"], item["content"])
+                    self._save_callbacks[save_type](str(target_file_path), item["content"])
+                    logger.info(f"Saved via callback to {target_file_path}")
                 except Exception as e:
                     logger.error(f"Save callback failed for {save_type}: {e}")
+                    # Fallback to direct write
+                    with open(target_file_path, 'w', encoding='utf-8') as f:
+                        f.write(item["content"])
+                    logger.info(f"Fallback save to {target_file_path}")
             else:
-                # Default save to file
-                file_path = Path(item["file_path"])
-                if not file_path.is_absolute():
-                    file_path = self.base_path / file_path
-                
-                file_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(file_path, 'w', encoding='utf-8') as f:
+                # Direct save to target file
+                with open(target_file_path, 'w', encoding='utf-8') as f:
                     f.write(item["content"])
+                logger.info(f"Direct save to {target_file_path}")
             
             # Mark as saved
             item["modified"] = False
-            logger.info(f"Auto-saved {save_id} to {auto_save_path}")
+            logger.info(f"Auto-saved {save_id} to both {auto_save_path} and {target_file_path}")
             return True
             
         except Exception as e:

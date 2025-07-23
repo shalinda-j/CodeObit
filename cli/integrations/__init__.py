@@ -1,3 +1,5 @@
+from .qwen3_integration import Qwen3Integration
+
 """
 External integrations module for codeobit AI Software Engineer CLI
 """
