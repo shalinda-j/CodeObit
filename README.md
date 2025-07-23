@@ -1,64 +1,116 @@
-# 🎯 codeobit - AI-Powered Interactive Development Environment
+<div align="center">
 
-**Public Beta v1.0.0-beta** - The ultimate vibe coding experience with AI automation
+# CodeObit CLI
+### AI-Powered Interactive Development Environment
 
-![codeobit Banner](https://img.shields.io/badge/codeobit-v1.0.0--beta-blue?style=for-the-badge&logo=python)
-![Python](https://img.shields.io/badge/python-3.11+-blue?style=flat-square)
-![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
-![Status](https://img.shields.io/badge/status-Public%20Beta-orange?style=flat-square)
+<img src="https://raw.githubusercontent.com/shalinda-j/CodeObit/main/assets/codeobit-logo.png" alt="CodeObit CLI Logo" width="200" height="200">
 
-A comprehensive AI-powered development lifecycle automation tool using Google Gemini 2.5. Experience "vibe coding" with intelligent project automation, MCP design patterns, and complete development workflow integration.
+**Transform your development workflow with intelligent AI assistance**
+
+[![Version](https://img.shields.io/badge/version-1.0.0--beta-blue?style=for-the-badge)](https://github.com/shalinda-j/CodeObit/releases)
+[![Python](https://img.shields.io/badge/python-3.11+-blue?style=for-the-badge&logo=python)](https://python.org)
+[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
+[![Status](https://img.shields.io/badge/status-Public%20Beta-orange?style=for-the-badge)](https://github.com/shalinda-j/CodeObit)
+
+[🚀 Get Started](#-installation) • [📖 Documentation](#-features) • [💬 Community](https://github.com/shalinda-j/CodeObit/discussions) • [🐛 Report Bug](https://github.com/shalinda-j/CodeObit/issues)
+
+</div>
+
+---
+
+## 🌟 What is CodeObit CLI?
+
+CodeObit CLI is a revolutionary AI-powered development environment that transforms how you build software. With multi-AI provider support, intelligent file management, and seamless workflow automation, it's designed for developers who want to focus on creating rather than configuring.
+
+### ⚡ Key Highlights
+- **Multi-AI Support**: Seamlessly switch between Gemini, Qwen 3, and OpenAI GPT
+- **Natural File References**: Mention files with `@filename.py` syntax
+- **Image Analysis**: Upload and analyze diagrams, wireframes, and screenshots
+- **Smart Auto-save**: Never lose your work with intelligent version control
+- **Web Integration**: Automatically browse and summarize web resources
+- **Cross-Platform**: Works on Windows, macOS, and Linux
 
 ## ✨ Features
 
-### 🔥 codeobit Interactive Experience
-Experience the ultimate "vibe coding" environment with AI-powered development automation:
+### 🤖 Multi-AI Provider Support
+
+<img src="https://raw.githubusercontent.com/shalinda-j/CodeObit/main/assets/multi-ai-providers.png" alt="Multi-AI Providers" width="600">
+
+Switch seamlessly between the world's leading AI models:
+
+- **🔮 Google Gemini** - Lightning-fast responses with Gemini 2.5-flash/pro
+- **🧠 Qwen 3** - Advanced reasoning via OpenRouter integration  
+- **⚡ OpenAI GPT-4** - Industry-leading language understanding
+- **🔄 Smart Routing** - Automatic model selection based on task complexity
 
 ```bash
-python main.py interactive
+# List available providers
+/providers list
+
+# Switch providers instantly
+/provider set qwen3
+/provider set openai
+/provider set gemini
 ```
 
-Or use the quick launcher:
+### 📁 Natural File References with @ Syntax
+
+Mention files naturally in conversations:
+
 ```bash
-python gemini
+# Analyze specific files
+"Review the code in @main.py and suggest improvements"
+
+# Compare multiple files  
+"Compare @src/auth.py with @tests/test_auth.py"
+
+# Reference entire directories
+"Show me the structure of @project/"
 ```
 
-**codeobit Features:**
-- 🎨 Beautiful ASCII branding with dynamic themes
-- 💬 Natural conversation with MCP design patterns
-- 🔄 Project memory and data collection
-- ⚡ Intelligent workflow automation
-- 🎯 Complete development lifecycle integration
-- 🌐 Browser automation and testing
-- 🐛 Advanced debugging with AI assistance
-- 📊 Token usage tracking and project status
+### 🖼️ Image Upload & Analysis
 
-### 🤖 AI-Driven Autonomous Workflow & Planning
-Advanced AI capabilities for intelligent project management:
+Upload diagrams, wireframes, and screenshots for AI analysis:
 
-**1. Dependency Prediction:**
-- The GeminiClient predicts comprehensive project dependencies
-- Automatically structures phases, tasks, milestones, team, and resources
-- Analyzes project templates to generate realistic project structures
-- Provides detailed task breakdown with effort estimation
-- Identifies critical dependencies and potential risks
+- **Supported Formats**: JPG, PNG, GIF, BMP, WebP, TIFF
+- **Smart Processing**: Automatic resizing and optimization
+- **AI Analysis**: Describe, explain, and generate code from images
 
-**2. AI-driven Project Planning:**
-- The ProjectCommand uses GeminiClient to generate comprehensive plans
-- Creates detailed schedules based on project requirements, team size, and estimated duration
-- Generates work breakdown structures (WBS) with task dependencies
-- Provides resource allocation and team composition recommendations
-- Includes risk assessment and mitigation strategies
-- Estimates budgets and timelines with multiple scenarios
+```bash
+# Upload and analyze images
+/image upload wireframe.png
+/image analyze diagram.jpg "Explain this architecture"
+```
 
-### 🛠️ Traditional Commands
-- `requirements` - Analyze and manage project requirements
-- `design` - Generate system architecture and design documents  
-- `code` - AI-powered code generation and analysis
-- `test` - Automated testing and test case generation
-- `security` - Security analysis and vulnerability scanning
-- `docs` - Automated documentation generation
-- `project` - Project management and task tracking
+### 💾 Intelligent Auto-save System
+
+- **Real-time Saving**: Never lose your work
+- **Version History**: Track all changes automatically
+- **Smart Recovery**: Restore from auto-saves
+- **Fallback Protection**: Multiple save mechanisms
+
+### 🌐 Web Integration & Data Collection
+
+Automatically browse and collect web resources:
+
+```bash
+# Browse and save to project memory
+/browse https://docs.python.org/3/
+/browse https://fastapi.tiangolo.com/
+
+# AI automatically summarizes and saves content
+```
+
+### 🎯 Interactive Development Environment
+
+Experience "vibe coding" with:
+
+- **🎨 Beautiful ASCII Branding** - Dynamic themes and rich UI
+- **💬 Natural Conversations** - Chat with AI about your code
+- **🔄 Project Memory** - Persistent context and data collection
+- **⚡ Workflow Automation** - Intelligent task completion
+- **🐛 Advanced Debugging** - AI-powered error analysis
+- **📊 Usage Tracking** - Monitor tokens and project status
 
 ## 🚀 Quick Start
 

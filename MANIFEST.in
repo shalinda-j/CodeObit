@@ -1,11 +1,43 @@
 include README.md
 include LICENSE
-include CHANGELOG.md
-include INSTALL.md
-include CONTRIBUTING.md
 include requirements.txt
+include requirements-termux.txt
 include pyproject.toml
-recursive-include codeobit *.py
+include setup.py
+include main.py
+
+# Include all CLI package files
+recursive-include cli *.py
+recursive-include cli *.yaml
+recursive-include cli *.json
+recursive-include cli *.txt
+
+# Include configuration files
+recursive-include config *.yaml
+
+# Include examples and templates
+recursive-include examples *
+
+# Include documentation
+recursive-include docs *.md
+recursive-include docs *.rst
+recursive-include docs *.txt
+
+# Include assets
+recursive-include assets *
+
+# Include scripts
+recursive-include scripts *
+
+# Include tests
 recursive-include tests *.py
+
+# Exclude development and temporary files
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
+global-exclude .DS_Store
+global-exclude *.log
+global-exclude test_*
+global-exclude *.backup
+global-exclude *.auto
+global-exclude *_backup_*.json

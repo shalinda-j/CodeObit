@@ -1,5 +1,0 @@
-attached_assets
-cli
-config
-dist
-templates
