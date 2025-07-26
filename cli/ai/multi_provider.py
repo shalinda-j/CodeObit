@@ -205,6 +205,20 @@ class MultiAIProviderManager:
         self.providers: Dict[str, BaseAIProvider] = {}
         self.current_provider: Optional[str] = None
         self.config_file = ".codeobit/ai_providers.json"
+        self.available_models: Dict[str, List[str]] = {}
+        self.provider_shortcuts = {
+            '!gpt': 'openai',
+            '!gemini': 'gemini', 
+            '!qwen': 'qwen3',
+            '!claude': 'claude',
+            '!kimi': 'kimi',
+            '!deepseek': 'deepseek',
+            '!openrouter': 'openrouter',
+            '!perplexity': 'perplexity',
+            '!groq': 'groq',
+            '!cohere': 'cohere',
+            '!mistral': 'mistral'
+        }
         self.load_providers()
     
     def load_providers(self):
@@ -235,18 +249,13 @@ class MultiAIProviderManager:
                     "api_key": "",
                     "base_url": "",
                     "headers": {},
-                    "request_format": "gemini"
-                },
-                "qwen3": {
-                    "name": "Qwen 3",
-                    "model": "qwen/qwen-2.5-72b-instruct",
-                    "api_key": "",
-                    "base_url": "https://openrouter.ai/api/v1",
-                    "headers": {
-                        "HTTP-Referer": "https://codeobit.dev",
-                        "X-Title": "CodeObit CLI"
-                    },
-                    "request_format": "openai"
+                    "request_format": "gemini",
+                    "available_models": [
+                        "gemini-2.5-flash",
+                        "gemini-2.5-pro",
+                        "gemini-1.5-flash",
+                        "gemini-1.5-pro"
+                    ]
                 },
                 "openai": {
                     "name": "OpenAI GPT",
@@ -254,10 +263,149 @@ class MultiAIProviderManager:
                     "api_key": "",
                     "base_url": "https://api.openai.com/v1",
                     "headers": {},
-                    "request_format": "openai"
+                    "request_format": "openai",
+                    "available_models": [
+                        "gpt-4",
+                        "gpt-4-turbo",
+                        "gpt-3.5-turbo",
+                        "gpt-4o",
+                        "gpt-4o-mini"
+                    ]
+                },
+                "claude": {
+                    "name": "Anthropic Claude",
+                    "model": "claude-3-5-sonnet-20241022",
+                    "api_key": "",
+                    "base_url": "https://api.anthropic.com/v1",
+                    "headers": {},
+                    "request_format": "anthropic",
+                    "available_models": [
+                        "claude-3-5-sonnet-20241022",
+                        "claude-3-5-haiku-20241022",
+                        "claude-3-opus-20240229",
+                        "claude-3-sonnet-20240229",
+                        "claude-3-haiku-20240307"
+                    ]
+                },
+                "qwen3": {
+                    "name": "Qwen 3 (OpenRouter)",
+                    "model": "qwen/qwen-2.5-72b-instruct",
+                    "api_key": "",
+                    "base_url": "https://openrouter.ai/api/v1",
+                    "headers": {
+                        "HTTP-Referer": "https://codeobit.dev",
+                        "X-Title": "CodeObit CLI"
+                    },
+                    "request_format": "openai",
+                    "available_models": [
+                        "qwen/qwen-2.5-72b-instruct",
+                        "qwen/qwen-2.5-32b-instruct",
+                        "qwen/qwen-2.5-14b-instruct",
+                        "qwen/qwen-2.5-7b-instruct"
+                    ]
+                },
+                "kimi": {
+                    "name": "Moonshot Kimi",
+                    "model": "moonshot-v1-8k",
+                    "api_key": "",
+                    "base_url": "https://api.moonshot.cn/v1",
+                    "headers": {},
+                    "request_format": "openai",
+                    "available_models": [
+                        "moonshot-v1-8k",
+                        "moonshot-v1-32k",
+                        "moonshot-v1-128k"
+                    ]
+                },
+                "deepseek": {
+                    "name": "DeepSeek",
+                    "model": "deepseek-chat",
+                    "api_key": "",
+                    "base_url": "https://api.deepseek.com/v1",
+                    "headers": {},
+                    "request_format": "openai",
+                    "available_models": [
+                        "deepseek-chat",
+                        "deepseek-coder"
+                    ]
+                },
+                "openrouter": {
+                    "name": "OpenRouter",
+                    "model": "meta-llama/llama-3.1-405b-instruct",
+                    "api_key": "",
+                    "base_url": "https://openrouter.ai/api/v1",
+                    "headers": {
+                        "HTTP-Referer": "https://codeobit.dev",
+                        "X-Title": "CodeObit CLI"
+                    },
+                    "request_format": "openai",
+                    "available_models": [
+                        "meta-llama/llama-3.1-405b-instruct",
+                        "meta-llama/llama-3.1-70b-instruct",
+                        "meta-llama/llama-3.1-8b-instruct",
+                        "google/gemini-pro-1.5",
+                        "anthropic/claude-3.5-sonnet"
+                    ]
+                },
+                "perplexity": {
+                    "name": "Perplexity",
+                    "model": "llama-3.1-sonar-large-128k-online",
+                    "api_key": "",
+                    "base_url": "https://api.perplexity.ai",
+                    "headers": {},
+                    "request_format": "openai",
+                    "available_models": [
+                        "llama-3.1-sonar-large-128k-online",
+                        "llama-3.1-sonar-small-128k-online",
+                        "llama-3.1-sonar-large-128k-chat",
+                        "llama-3.1-sonar-small-128k-chat"
+                    ]
+                },
+                "groq": {
+                    "name": "Groq",
+                    "model": "llama-3.1-70b-versatile",
+                    "api_key": "",
+                    "base_url": "https://api.groq.com/openai/v1",
+                    "headers": {},
+                    "request_format": "openai",
+                    "available_models": [
+                        "llama-3.1-70b-versatile",
+                        "llama-3.1-8b-instant",
+                        "mixtral-8x7b-32768",
+                        "gemma2-9b-it"
+                    ]
+                },
+                "cohere": {
+                    "name": "Cohere",
+                    "model": "command-r-plus",
+                    "api_key": "",
+                    "base_url": "https://api.cohere.ai/v1",
+                    "headers": {},
+                    "request_format": "cohere",
+                    "available_models": [
+                        "command-r-plus",
+                        "command-r",
+                        "command",
+                        "command-nightly"
+                    ]
+                },
+                "mistral": {
+                    "name": "Mistral AI",
+                    "model": "mistral-large-latest",
+                    "api_key": "",
+                    "base_url": "https://api.mistral.ai/v1",
+                    "headers": {},
+                    "request_format": "openai",
+                    "available_models": [
+                        "mistral-large-latest",
+                        "mistral-medium-latest",
+                        "mistral-small-latest",
+                        "open-mistral-7b",
+                        "open-mixtral-8x7b"
+                    ]
                 }
             },
-            "current_provider": "gemini"
+            "current_provider": None
         }
         
         # Create config directory
@@ -358,6 +506,190 @@ class MultiAIProviderManager:
             raise Exception("No active AI provider available")
         
         return self.providers[provider_name].generate_content(prompt, system_instruction, temperature)
+    
+    def handle_provider_shortcut(self, shortcut: str) -> Optional[str]:
+        """Handle provider shortcuts like !gpt, !gemini, etc."""
+        return self.provider_shortcuts.get(shortcut.lower())
+    
+    def setup_provider_interactive(self, provider_name: str) -> bool:
+        """Interactively setup a provider with API key and model selection"""
+        try:
+            from rich.console import Console
+            from rich.prompt import Prompt, IntPrompt
+            from rich.table import Table
+            from rich.panel import Panel
+            
+            console = Console()
+            
+            # Load default config to get provider info
+            if os.path.exists(self.config_file):
+                with open(self.config_file, 'r') as f:
+                    config_data = json.load(f)
+            else:
+                self.create_default_config()
+                with open(self.config_file, 'r') as f:
+                    config_data = json.load(f)
+            
+            if provider_name not in config_data['providers']:
+                console.print(f"[red]Unknown provider: {provider_name}[/red]")
+                return False
+            
+            provider_config = config_data['providers'][provider_name]
+            
+            # Show provider info
+            info_panel = Panel(
+                f"[bold cyan]{provider_config['name']}[/bold cyan]\n\n"
+                f"Base URL: {provider_config.get('base_url', 'N/A')}\n"
+                f"Format: {provider_config.get('request_format', 'openai')}",
+                title=f"🤖 Setting up {provider_name}",
+                border_style="cyan"
+            )
+            console.print(info_panel)
+            
+            # Get API key
+            api_key = Prompt.ask(
+                f"[yellow]Enter your {provider_config['name']} API key[/yellow]",
+                password=True
+            )
+            
+            if not api_key:
+                console.print("[red]API key is required[/red]")
+                return False
+            
+            # Show available models
+            available_models = provider_config.get('available_models', [provider_config['model']])
+            
+            if len(available_models) > 1:
+                console.print("\n[bold]Available Models:[/bold]")
+                table = Table()
+                table.add_column("#", style="cyan")
+                table.add_column("Model", style="green")
+                
+                for i, model in enumerate(available_models, 1):
+                    table.add_row(str(i), model)
+                
+                console.print(table)
+                
+                model_choice = IntPrompt.ask(
+                    "Select model number",
+                    default=1,
+                    choices=[str(i) for i in range(1, len(available_models) + 1)]
+                )
+                selected_model = available_models[model_choice - 1]
+            else:
+                selected_model = available_models[0]
+            
+            # Create headers
+            headers = provider_config.get("headers", {}).copy()
+            if provider_config.get("request_format") == "openai":
+                headers["Authorization"] = f"Bearer {api_key}"
+                headers["Content-Type"] = "application/json"
+            elif provider_config.get("request_format") == "anthropic":
+                headers["x-api-key"] = api_key
+                headers["Content-Type"] = "application/json"
+                headers["anthropic-version"] = "2023-06-01"
+            
+            # Create provider config
+            config = AIProviderConfig(
+                name=provider_config["name"],
+                api_key=api_key,
+                base_url=provider_config.get("base_url", ""),
+                model=selected_model,
+                headers=headers,
+                request_format=provider_config.get("request_format", "openai")
+            )
+            
+            # Create provider instance
+            provider = self._create_provider_instance(provider_name, config)
+            if not provider:
+                return False
+            
+            # Test connection
+            console.print("[yellow]Testing connection...[/yellow]")
+            if provider.test_connection():
+                console.print(f"[green]✓ Successfully connected to {provider_config['name']}![/green]")
+                self.providers[provider_name] = provider
+                self.current_provider = provider_name
+                
+                # Update config file
+                config_data['providers'][provider_name]['model'] = selected_model
+                config_data['current_provider'] = provider_name
+                
+                with open(self.config_file, 'w') as f:
+                    json.dump(config_data, f, indent=2)
+                
+                return True
+            else:
+                console.print(f"[red]✗ Failed to connect to {provider_config['name']}[/red]")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Failed to setup provider {provider_name}: {e}")
+            return False
+    
+    def _create_provider_instance(self, provider_name: str, config: AIProviderConfig) -> Optional[BaseAIProvider]:
+        """Create provider instance based on name"""
+        try:
+            if provider_name == "gemini":
+                return GeminiProvider(config)
+            elif provider_name in ["openai", "qwen3", "kimi", "deepseek", "openrouter", "perplexity", "groq", "mistral"]:
+                return OpenAIProvider(config)
+            elif provider_name == "claude":
+                return self._create_claude_provider(config)
+            elif provider_name == "cohere":
+                return self._create_cohere_provider(config)
+            else:
+                # Default to OpenAI-compatible provider
+                return OpenAIProvider(config)
+        except Exception as e:
+            logger.error(f"Failed to create provider instance for {provider_name}: {e}")
+            return None
+    
+    def _create_claude_provider(self, config: AIProviderConfig) -> BaseAIProvider:
+        """Create Claude provider (Anthropic API)"""
+        # For now, use OpenAI-compatible format as many providers support it
+        # In future, create dedicated ClaudeProvider class
+        return OpenAIProvider(config)
+    
+    def _create_cohere_provider(self, config: AIProviderConfig) -> BaseAIProvider:
+        """Create Cohere provider"""
+        # For now, use OpenAI-compatible format
+        # In future, create dedicated CohereProvider class
+        return OpenAIProvider(config)
+    
+    def list_all_available_providers(self) -> List[Dict[str, Any]]:
+        """List all available providers (configured and unconfigured)"""
+        result = []
+        
+        # Load default config to get all possible providers
+        try:
+            if os.path.exists(self.config_file):
+                with open(self.config_file, 'r') as f:
+                    config_data = json.load(f)
+            else:
+                self.create_default_config()
+                with open(self.config_file, 'r') as f:
+                    config_data = json.load(f)
+            
+            for name, config in config_data['providers'].items():
+                shortcut = None
+                for sc, pn in self.provider_shortcuts.items():
+                    if pn == name:
+                        shortcut = sc
+                        break
+                
+                result.append({
+                    "name": name,
+                    "display_name": config['name'],
+                    "shortcut": shortcut,
+                    "configured": name in self.providers,
+                    "active": name == self.current_provider,
+                    "models": config.get('available_models', [config.get('model', 'Unknown')])
+                })
+        except Exception as e:
+            logger.error(f"Failed to list providers: {e}")
+        
+        return result
     
     def save_config(self):
         """Save current configuration"""

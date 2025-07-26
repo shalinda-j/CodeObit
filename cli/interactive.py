@@ -27,6 +27,7 @@ from rich.progress import Progress
 from cli.ai.multi_provider import get_provider_manager
 from cli.utils.config import ConfigManager
 from cli.utils.file_manager import FileManager
+from cli.utils.project_manager import ProjectManager
 
 # MCP Components
 from cli.web.models.search_model import SearchModel
@@ -42,9 +43,11 @@ class InteractiveCLI:
         self.config_manager = ConfigManager()
         self.file_manager = FileManager()
         self.provider_manager = get_provider_manager()
+        self.project_manager = ProjectManager()
         self.session_history = []
         self.color_theme = "auto"
-        self.project_data = self._load_project_data()
+        # Load legacy project data for backward compatibility
+        self.project_data = self._load_legacy_project_data()
         self.current_project = self.project_data.get('name', 'Interactive Session')
         
         # Initialize MCP components for web search
@@ -66,25 +69,31 @@ class InteractiveCLI:
         except Exception as e:
             self.console.print(f"[red]Error: {e}[/red]")
     
-    def _load_project_data(self) -> dict:
-        """Load or initialize project data"""
+    def _load_legacy_project_data(self) -> dict:
+        """Load legacy project data for backward compatibility"""
         try:
+            # Check if we have a current project loaded in ProjectManager
+            current_project = self.project_manager.get_current_project_info()
+            if current_project["is_loaded"]:
+                return current_project["data"]
+            
+            # Try to load from legacy project_data.json
             project_file = Path("project_data.json")
             if project_file.exists():
                 with open(project_file, 'r') as f:
                     data = json.load(f)
-            else:
-                data = {
-                    'project_name': 'Interactive Session',
-                    'tokens_used': 0,
-                    'web_resources': [],
-                    'requirements': [],
-                    'design': {},
-                    'notes': []
-                }
-                with open(project_file, 'w') as f:
-                    json.dump(data, f, indent=2)
-            return data
+                return data
+            
+            # Return default data
+            return {
+                'name': 'Interactive Session',
+                'project_name': 'Interactive Session',
+                'tokens_used': 0,
+                'web_resources': [],
+                'requirements': [],
+                'design': {},
+                'notes': []
+            }
         except Exception as e:
             self.console.print(f"[red]Error loading project data: {e}[/red]")
             return {}
@@ -92,8 +101,16 @@ class InteractiveCLI:
     def _save_project_data(self):
         """Save project data to file"""
         try:
-            with open("project_data.json", 'w') as f:
-                json.dump(self.project_data, f, indent=2)
+            # Save to ProjectManager if we have a current project
+            current_project = self.project_manager.get_current_project_info()
+            if current_project["is_loaded"]:
+                # Update project manager's data with our current data
+                for key, value in self.project_data.items():
+                    self.project_manager.update_project_data(key, value)
+            else:
+                # Fallback to legacy file saving
+                with open("project_data.json", 'w') as f:
+                    json.dump(self.project_data, f, indent=2)
         except Exception as e:
             self.console.print(f"[red]Error saving project data: {e}[/red]")
 
@@ -145,8 +162,11 @@ class InteractiveCLI:
         """Setup and authenticate multiple AI providers"""
         
         available_providers = self.provider_manager.list_providers()
+        all_providers = self.provider_manager.list_all_available_providers()
+        
         if not available_providers:
-            self.console.print("[red]No AI providers configured[/red]")
+            self.console.print("[yellow]No AI providers configured yet![/yellow]\n")
+            self.show_provider_setup_guide()
             return
         
         self.console.print("Available AI Providers:")
@@ -165,6 +185,7 @@ class InteractiveCLI:
                 self.console.print(f"[red]✗ Failed to connect to {current_provider.name}[/red]")
         else:
             self.console.print("[red]No active AI provider found[/red]")
+            self.show_provider_setup_guide()
     
     def main_loop(self):
         """Main interactive chat loop with enhanced project management"""
@@ -183,6 +204,13 @@ class InteractiveCLI:
                 # Skip empty inputs
                 if not user_input:
                     continue
+                
+                # Handle AI provider shortcuts first (like !gpt, !gemini, etc.)
+                if user_input.startswith('!') and len(user_input.split()) == 1:
+                    provider_name = self.provider_manager.handle_provider_shortcut(user_input)
+                    if provider_name:
+                        self.handle_provider_setup(provider_name)
+                        continue
                 
                 # Handle shell commands (start with ! or are common shell commands)
                 if user_input.startswith('!') or user_input.split()[0].lower() in ['cd', 'ls', 'dir', 'pwd', 'cat', 'echo', 'type', 'cls', 'ls']:
@@ -474,8 +502,19 @@ class InteractiveCLI:
             
         subcmd = args[0].lower()
         
-        if subcmd in ["new", "init"]:
+        if subcmd in ["new", "init", "create"]:
             return self._init_project(args[1:] if len(args) > 1 else [])
+        elif subcmd in ["load", "open"]:
+            return self._load_project(args[1:] if len(args) > 1 else [])
+        elif subcmd in ["list", "ls"]:
+            self.project_manager.show_projects_table()
+            return ""
+        elif subcmd == "save":
+            return self._save_current_project()
+        elif subcmd == "delete":
+            return self._delete_project(args[1:] if len(args) > 1 else [])
+        elif subcmd == "export":
+            return self._export_project(args[1:] if len(args) > 1 else [])
         elif subcmd == "requirements":
             return self._manage_requirements(args[1:] if len(args) > 1 else [])
         elif subcmd == "design":
@@ -536,21 +575,21 @@ class InteractiveCLI:
         """Initialize a new project"""
         if not args:
             project_name = Prompt.ask("[blue]Enter project name[/blue]")
+            description = Prompt.ask("[blue]Enter project description (optional)[/blue]", default="")
         else:
             project_name = ' '.join(args)
+            description = Prompt.ask("[blue]Enter project description (optional)[/blue]", default="")
         
-        self.project_data = {
-            'project_name': project_name,
-            'created_at': datetime.now().isoformat(),
-            'tokens_used': 0,
-            'web_resources': [],
-            'requirements': [],
-            'design': {},
-            'notes': []
-        }
+        # Create project using ProjectManager
+        success = self.project_manager.create_project(project_name, description)
         
-        self._save_project_data()
-        return f"[green]✓ Created new project: {project_name}[/green]"
+        if success:
+            # Update our local project data
+            current_project = self.project_manager.get_current_project_info()
+            self.project_data = current_project["data"]
+            return f"[green]✓ Created new project: {project_name}[/green]\n[dim]Project saved to: {current_project['path']}[/dim]"
+        else:
+            return "[red]Failed to create project[/red]"
     
     def _manage_requirements(self, args: List[str]) -> str:
         """Manage project requirements"""
@@ -623,17 +662,86 @@ class InteractiveCLI:
             
         return f"[red]Unknown notes command: {action}[/red]"
     
+    def _load_project(self, args: List[str]) -> str:
+        """Load an existing project"""
+        if not args:
+            # Show available projects and let user choose
+            projects = self.project_manager.list_projects()
+            if not projects:
+                return "[yellow]No projects found. Create your first project with '/project new'[/yellow]"
+            
+            self.project_manager.show_projects_table()
+            project_name = Prompt.ask("[blue]Enter project name to load[/blue]")
+        else:
+            project_name = ' '.join(args)
+        
+        success = self.project_manager.load_project(project_name)
+        if success:
+            # Update our local project data
+            current_project = self.project_manager.get_current_project_info()
+            self.project_data = current_project["data"]
+            return f"[green]✓ Loaded project: {project_name}[/green]"
+        else:
+            return f"[red]Failed to load project: {project_name}[/red]"
+    
+    def _save_current_project(self) -> str:
+        """Save the current project"""
+        success = self.project_manager.save_current_project()
+        if success:
+            return "[green]✓ Project saved successfully[/green]"
+        else:
+            return "[red]No active project to save[/red]"
+    
+    def _delete_project(self, args: List[str]) -> str:
+        """Delete a project"""
+        if not args:
+            # Show available projects and let user choose
+            projects = self.project_manager.list_projects()
+            if not projects:
+                return "[yellow]No projects found[/yellow]"
+            
+            self.project_manager.show_projects_table()
+            project_name = Prompt.ask("[blue]Enter project name to delete[/blue]")
+        else:
+            project_name = ' '.join(args)
+        
+        success = self.project_manager.delete_project(project_name)
+        if success:
+            return f"[green]✓ Deleted project: {project_name}[/green]"
+        else:
+            return f"[red]Failed to delete project: {project_name}[/red]"
+    
+    def _export_project(self, args: List[str]) -> str:
+        """Export a project to a different location"""
+        if len(args) < 2:
+            project_name = Prompt.ask("[blue]Enter project name to export[/blue]")
+            export_path = Prompt.ask("[blue]Enter export destination path[/blue]")
+        else:
+            project_name = args[0]
+            export_path = ' '.join(args[1:])
+        
+        success = self.project_manager.export_project(project_name, export_path)
+        if success:
+            return f"[green]✓ Exported project '{project_name}' to {export_path}[/green]"
+        else:
+            return f"[red]Failed to export project: {project_name}[/red]"
+    
     def _show_project_help(self) -> str:
         """Show help for project commands"""
         return """[bold]Project Management Commands:[/bold]
-  /project new <name>      - Create a new project
-  /project requirements    - List requirements
+  /project new <name>        - Create a new project
+  /project load <name>       - Load an existing project
+  /project list              - List all projects
+  /project save              - Save current project
+  /project delete <name>     - Delete a project
+  /project export <name> <path> - Export project to path
+  /project requirements      - List requirements
   /project requirements add <desc> - Add a requirement
-  /project design          - View/Edit design
-  /project notes           - View notes
-  /project notes add <note> - Add a note
-  /project status         - Show project status
-  /project help           - Show this help
+  /project design            - View/Edit design
+  /project notes             - View notes
+  /project notes add <note>  - Add a note
+  /project status           - Show project status
+  /project help             - Show this help
         """
 
     def handle_special_command(self, command: str):
@@ -801,6 +909,10 @@ class InteractiveCLI:
         help_panel = Panel(
             """[bold cyan]codeobit Interactive Commands:[/bold cyan]
 
+[yellow]AI Provider Setup:[/yellow]
+  !gpt, !gemini, !claude, !qwen, !kimi, !deepseek, !openrouter, etc.
+  Use any AI provider shortcut to quickly set up that provider
+
 [yellow]Special Commands:[/yellow]
   /help, /h          - Show this help
   /theme [theme]     - Change color theme (auto, dark, light)
@@ -901,9 +1013,10 @@ class InteractiveCLI:
             "You are an expert software developer. Generate clean, well-documented, "
             "production-ready code following best practices and industry standards."
         )
-        if self.gemini_client:
-            return self.gemini_client.generate_content(request, system_instruction=system_instruction)
-        return "Error: Gemini client not initialized"
+        provider = self.provider_manager.get_current_provider()
+        if provider:
+            return provider.generate_content(request, system_instruction=system_instruction)
+        return "Error: No active AI provider available"
     
     def handle_test_request(self, request: str) -> str:
         """Handle testing-related requests"""
@@ -911,9 +1024,10 @@ class InteractiveCLI:
             "You are a QA engineer and testing expert. Create comprehensive test suites, "
             "test cases, and testing strategies for maximum code coverage and quality."
         )
-        if self.gemini_client:
-            return self.gemini_client.generate_content(request, system_instruction=system_instruction)
-        return "Error: Gemini client not initialized"
+        provider = self.provider_manager.get_current_provider()
+        if provider:
+            return provider.generate_content(request, system_instruction=system_instruction)
+        return "Error: No active AI provider available"
     
     def handle_security_request(self, request: str) -> str:
         """Handle security-related requests"""
@@ -921,9 +1035,10 @@ class InteractiveCLI:
             "You are a cybersecurity expert. Analyze code for vulnerabilities, "
             "suggest security improvements, and provide security best practices."
         )
-        if self.gemini_client:
-            return self.gemini_client.generate_content(request, system_instruction=system_instruction)
-        return "Error: Gemini client not initialized"
+        provider = self.provider_manager.get_current_provider()
+        if provider:
+            return provider.generate_content(request, system_instruction=system_instruction)
+        return "Error: No active AI provider available"
     
     def handle_docs_request(self, request: str) -> str:
         """Handle documentation-related requests"""
@@ -931,9 +1046,10 @@ class InteractiveCLI:
             "You are a technical writer. Create clear, comprehensive documentation "
             "including README files, API docs, and user guides."
         )
-        if self.gemini_client:
-            return self.gemini_client.generate_content(request, system_instruction=system_instruction)
-        return "Error: Gemini client not initialized"
+        provider = self.provider_manager.get_current_provider()
+        if provider:
+            return provider.generate_content(request, system_instruction=system_instruction)
+        return "Error: No active AI provider available"
     
     def change_theme(self, theme: str = None) -> None:
         """Change the color theme of the console
@@ -1024,7 +1140,11 @@ class InteractiveCLI:
         status_table.add_column("Component", style="cyan")
         status_table.add_column("Status", style="green")
         
-        status_table.add_row("Gemini Client", "✓ Connected" if self.gemini_client else "✗ Not connected")
+        # Get current provider status
+        current_provider = self.provider_manager.get_current_provider()
+        provider_status = "✓ Connected" if current_provider else "✗ Not connected"
+        provider_name = current_provider.name if current_provider else "No provider"
+        status_table.add_row("AI Provider", f"{provider_name} - {provider_status}")
         status_table.add_row("Project", self.project_data.get('project_name', 'No project'))
         status_table.add_row("Theme", self.color_theme.title())
         status_table.add_row("History Items", str(len(self.session_history)))
@@ -1070,10 +1190,13 @@ class InteractiveCLI:
         else:
             self.console.print(f"[yellow]Generating {item_type}: {description}[/yellow]")
             # Use AI to generate based on description
-            if self.gemini_client:
+            provider = self.provider_manager.get_current_provider()
+            if provider:
                 prompt = f"Generate {item_type} based on this description: {description}"
-                response = self.gemini_client.generate_content(prompt)
+                response = provider.generate_content(prompt)
                 self.console.print(Panel(Markdown(response), title=f"Generated {item_type}", border_style="green"))
+            else:
+                self.console.print("Error: No active AI provider available")
     
     def generate_file(self, description: str):
         """Generate a complete file based on description"""
@@ -1082,7 +1205,8 @@ class InteractiveCLI:
         
         filename = Prompt.ask("[blue]Enter filename (with extension)[/blue]")
         
-        if self.gemini_client:
+        provider = self.provider_manager.get_current_provider()
+        if provider:
             prompt = f"""Generate a complete, production-ready file for: {description}
             
 Filename: {filename}
@@ -1096,7 +1220,7 @@ Include:
 Generate only the file content, no additional explanation."""
             
             with self.console.status("[bold green]Generating file...", spinner="dots"):
-                response = self.gemini_client.generate_content(prompt)
+                response = provider.generate_content(prompt)
             
             # Ask if user wants to save to file
             if Confirm.ask(f"Save generated content to {filename}?"):
@@ -1121,6 +1245,8 @@ Generate only the file content, no additional explanation."""
                     self.console.print(f"[red]Error saving file: {e}[/red]")
             else:
                 self.console.print(Panel(Markdown(response), title=f"Generated File: {filename}", border_style="green"))
+        else:
+            self.console.print("Error: No active AI provider available")
     
     def generate_function(self, description: str):
         """Generate a function based on description"""
@@ -1129,7 +1255,8 @@ Generate only the file content, no additional explanation."""
         
         language = Prompt.ask("[blue]Programming language[/blue]", default="python")
         
-        if self.gemini_client:
+        provider = self.provider_manager.get_current_provider()
+        if provider:
             prompt = f"""Generate a well-documented {language} function for: {description}
             
 Include:
@@ -1142,9 +1269,11 @@ Include:
 Generate only the function code, no additional explanation."""
             
             with self.console.status("[bold green]Generating function...", spinner="dots"):
-                response = self.gemini_client.generate_content(prompt)
+                response = provider.generate_content(prompt)
             
             self.console.print(Panel(Markdown(f"```{language}\n{response}\n```"), title="Generated Function", border_style="green"))
+        else:
+            self.console.print("Error: No active AI provider available")
     
     def generate_class(self, description: str):
         """Generate a class based on description"""
@@ -1153,7 +1282,8 @@ Generate only the function code, no additional explanation."""
         
         language = Prompt.ask("[blue]Programming language[/blue]", default="python")
         
-        if self.gemini_client:
+        provider = self.provider_manager.get_current_provider()
+        if provider:
             prompt = f"""Generate a well-structured {language} class for: {description}
             
 Include:
@@ -1167,9 +1297,11 @@ Include:
 Generate only the class code, no additional explanation."""
             
             with self.console.status("[bold green]Generating class...", spinner="dots"):
-                response = self.gemini_client.generate_content(prompt)
+                response = provider.generate_content(prompt)
             
             self.console.print(Panel(Markdown(f"```{language}\n{response}\n```"), title="Generated Class", border_style="green"))
+        else:
+            self.console.print("Error: No active AI provider available")
     
     def generate_api(self, description: str):
         """Generate API endpoints based on description"""
@@ -1178,7 +1310,8 @@ Generate only the class code, no additional explanation."""
         
         framework = Prompt.ask("[blue]Framework[/blue]", default="FastAPI")
         
-        if self.gemini_client:
+        provider = self.provider_manager.get_current_provider()
+        if provider:
             prompt = f"""Generate a complete {framework} API for: {description}
             
 Include:
@@ -1193,9 +1326,11 @@ Include:
 Generate production-ready code."""
             
             with self.console.status("[bold green]Generating API...", spinner="dots"):
-                response = self.gemini_client.generate_content(prompt)
+                response = provider.generate_content(prompt)
             
             self.console.print(Panel(Markdown(response), title="Generated API", border_style="green"))
+        else:
+            self.console.print("Error: No active AI provider available")
     
     def generate_test(self, description: str):
         """Generate test cases based on description"""
@@ -1204,7 +1339,8 @@ Generate production-ready code."""
         
         test_framework = Prompt.ask("[blue]Test framework[/blue]", default="pytest")
         
-        if self.gemini_client:
+        provider = self.provider_manager.get_current_provider()
+        if provider:
             prompt = f"""Generate comprehensive {test_framework} tests for: {description}
             
 Include:
@@ -1218,9 +1354,11 @@ Include:
 Generate complete, runnable test code."""
             
             with self.console.status("[bold green]Generating tests...", spinner="dots"):
-                response = self.gemini_client.generate_content(prompt)
+                response = provider.generate_content(prompt)
             
             self.console.print(Panel(Markdown(response), title="Generated Tests", border_style="green"))
+        else:
+            self.console.print("Error: No active AI provider available")
     
     def analyze_file(self, file_path: str):
         """Analyze the specified file for code quality, security, and improvements"""
@@ -1253,7 +1391,8 @@ Generate complete, runnable test code."""
             
             language = language_map.get(file_ext, 'Unknown')
             
-            if self.gemini_client:
+            provider = self.provider_manager.get_current_provider()
+            if provider:
                 prompt = f"""Analyze this {language} code file for:
                 
 1. **Code Quality**: Structure, readability, maintainability
@@ -1272,7 +1411,7 @@ File: {file_path}
 Provide detailed analysis with specific line references where applicable."""
                 
                 with self.console.status(f"[bold green]Analyzing {file_path}...", spinner="dots"):
-                    response = self.gemini_client.analyze_code(content, language.lower(), "comprehensive")
+                    response = provider.analyze_code(content, language.lower(), "comprehensive")
                 
                 self.console.print(Panel(
                     Markdown(response), 
@@ -1294,6 +1433,8 @@ Provide detailed analysis with specific line references where applicable."""
                 
                 self.project_data['code_analysis'].append(analysis_record)
                 self._save_project_data()
+            else:
+                self.console.print("Error: No active AI provider available")
                 
         except Exception as e:
             self.console.print(f"[red]Error analyzing file: {e}[/red]")
@@ -1370,3 +1511,41 @@ Provide detailed analysis with specific line references where applicable."""
                 
         except Exception as e:
             self.console.print(f"[red]Error analyzing coverage: {e}[/red]")
+    
+    def show_provider_setup_guide(self):
+        """Show guide for setting up AI providers"""
+        all_providers = self.provider_manager.list_all_available_providers()
+        
+        setup_panel = Panel(
+            "[bold yellow]🤖 AI Provider Setup Guide[/bold yellow]\n\n"
+            "To get started with CodeObit, you need to configure at least one AI provider.\n\n"
+            "[bold cyan]Available Providers:[/bold cyan]\n" +
+            "\n".join([
+                f"  {p['shortcut']} - {p['display_name']} {'✓' if p['configured'] else ''}" 
+                for p in all_providers if p['shortcut']
+            ]) +
+            "\n\n[bold green]Quick Setup:[/bold green]\n"
+            "Type any shortcut (e.g., !gpt, !gemini, !claude) to set up that provider.\n"
+            "You'll be guided through API key setup and model selection.\n\n"
+            "[bold blue]Example:[/bold blue]\n"
+            "  !gpt     - Setup OpenAI GPT\n"
+            "  !gemini  - Setup Google Gemini\n"
+            "  !claude  - Setup Anthropic Claude",
+            title="🚀 Get Started",
+            border_style="yellow"
+        )
+        
+        self.console.print(setup_panel)
+    
+    def handle_provider_setup(self, provider_name: str):
+        """Handle provider setup from shortcut commands"""
+        try:
+            success = self.provider_manager.setup_provider_interactive(provider_name)
+            if success:
+                self.console.print(f"\n[bold green]🎉 {provider_name} is now ready to use![/bold green]")
+                self.console.print("[dim]You can now start asking questions or give commands.[/dim]")
+            else:
+                self.console.print(f"\n[red]Failed to setup {provider_name}. Please try again.[/red]")
+                self.show_provider_setup_guide()
+        except Exception as e:
+            self.console.print(f"[red]Error setting up provider: {e}[/red]")
