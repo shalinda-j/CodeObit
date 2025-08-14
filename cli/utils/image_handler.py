@@ -222,11 +222,104 @@ class ImageHandler:
                 self.console.print("[red]No active AI provider available[/red]")
                 return None
             
-            # For now, we'll use a text-based analysis since we need to implement vision API
-            # This is a placeholder that would need actual vision API integration
-            
+            # Placeholder: use text-based analysis until vision API is wired for providers
             info = result['info']
-            description = f\"\"\"Image Analysis Request:\n\nImage Details:\n- Filename: {info['filename']}\n- Format: {info.get('format', 'Unknown')}\n- Dimensions: {info.get('width', 0)} × {info.get('height', 0)} pixels\n- File Size: {info.get('file_size', 0) / 1024:.1f} KB\n- Color Mode: {info.get('mode', 'Unknown')}\n\nUser Request: {analysis_prompt}\n\nNote: This is a placeholder for image analysis. To enable full image analysis, implement vision API integration with the current AI provider.\"\"\"\n            \n            # Generate analysis using text prompt (placeholder)\n            analysis = provider.generate_content(\n                f\"Based on this image information, provide analysis for: {analysis_prompt}\\n\\n{description}\",\n                system_instruction=\"You are an AI assistant helping with image analysis. Provide helpful analysis based on the image metadata provided.\"\n            )\n            \n            return analysis\n            \n        except Exception as e:\n            self.console.print(f\"[red]Error analyzing image: {e}[/red]\")\n            return None
+            description = f"""Image Analysis Request:
+
+Image Details:
+- Filename: {info['filename']}
+- Format: {info.get('format', 'Unknown')}
+- Dimensions: {info.get('width', 0)} × {info.get('height', 0)} pixels
+- File Size: {info.get('file_size', 0) / 1024:.1f} KB
+- Color Mode: {info.get('mode', 'Unknown')}
+
+User Request: {analysis_prompt}
+
+Note: This is a placeholder for image analysis. To enable full image analysis, implement vision API integration with the current AI provider."""
+            
+            # Generate analysis using text prompt (placeholder)
+            analysis = provider.generate_content(
+                f"Based on this image information, provide analysis for: {analysis_prompt}\n\n{description}",
+                system_instruction=(
+                    "You are an AI assistant helping with image analysis. "
+                    "Provide helpful analysis based on the image metadata provided."
+                )
+            )
+            
+            return analysis
+            
+        except Exception as e:
+            self.console.print(f"[red]Error analyzing image: {e}[/red]")
+            return None
     
-    def save_image_to_project(self, image_path: str, project_data: Dict) -> bool:\n        \"\"\"Save image information to project data\"\"\"\n        try:\n            result = self.process_image(image_path)\n            \n            if not result['valid']:\n                return False\n            \n            # Initialize images array if not exists\n            if 'images' not in project_data:\n                project_data['images'] = []\n            \n            # Create image record\n            image_record = {\n                'path': result['path'],\n                'info': result['info'],\n                'uploaded_at': os.path.getctime(result['path']),\n                'processed': result['ready_for_ai']\n            }\n            \n            # Check if image already exists\n            existing_idx = next(\n                (i for i, img in enumerate(project_data['images']) \n                 if img['path'] == result['path']), \n                None\n            )\n            \n            if existing_idx is not None:\n                project_data['images'][existing_idx] = image_record\n            else:\n                project_data['images'].append(image_record)\n            \n            return True\n            \n        except Exception as e:\n            self.console.print(f\"[red]Error saving image to project: {e}[/red]\")\n            return False
-    \n    def list_supported_formats(self) -> None:\n        \"\"\"Display supported image formats\"\"\"\n        formats_table = Table(title=\"📸 Supported Image Formats\")\n        formats_table.add_column(\"Extension\", style=\"cyan\")\n        formats_table.add_column(\"Description\", style=\"white\")\n        \n        format_descriptions = {\n            '.jpg': 'JPEG - Compressed image format',\n            '.jpeg': 'JPEG - Compressed image format',\n            '.png': 'PNG - Lossless compression with transparency',\n            '.gif': 'GIF - Animated images and simple graphics',\n            '.bmp': 'BMP - Uncompressed bitmap format',\n            '.webp': 'WebP - Modern image format by Google',\n            '.tiff': 'TIFF - High-quality image format'\n        }\n        \n        for ext in sorted(self.supported_formats):\n            description = format_descriptions.get(ext, 'Supported image format')\n            formats_table.add_row(ext.upper(), description)\n        \n        self.console.print(formats_table)\n        self.console.print(f\"\\n[cyan]Maximum file size:[/cyan] {self.max_size_mb} MB\")\n        self.console.print(f\"[cyan]Maximum dimension for AI:[/cyan] 1024 pixels\")\n\n# Global instance\n_image_handler: Optional[ImageHandler] = None\n\ndef get_image_handler() -> ImageHandler:\n    \"\"\"Get or create global image handler\"\"\"\n    global _image_handler\n    if _image_handler is None:\n        _image_handler = ImageHandler()\n    return _image_handler
+    def save_image_to_project(self, image_path: str, project_data: Dict) -> bool:
+        """Save image information to project data"""
+        try:
+            result = self.process_image(image_path)
+            
+            if not result['valid']:
+                return False
+            
+            # Initialize images array if not exists
+            if 'images' not in project_data:
+                project_data['images'] = []
+            
+            # Create image record
+            image_record = {
+                'path': result['path'],
+                'info': result['info'],
+                'uploaded_at': os.path.getctime(result['path']),
+                'processed': result['ready_for_ai']
+            }
+            
+            # Check if image already exists
+            existing_idx = next(
+                (i for i, img in enumerate(project_data['images']) if img['path'] == result['path']),
+                None
+            )
+            
+            if existing_idx is not None:
+                project_data['images'][existing_idx] = image_record
+            else:
+                project_data['images'].append(image_record)
+            
+            return True
+            
+        except Exception as e:
+            self.console.print(f"[red]Error saving image to project: {e}[/red]")
+            return False
+    
+    def list_supported_formats(self) -> None:
+        """Display supported image formats"""
+        formats_table = Table(title="📸 Supported Image Formats")
+        formats_table.add_column("Extension", style="cyan")
+        formats_table.add_column("Description", style="white")
+        
+        format_descriptions = {
+            '.jpg': 'JPEG - Compressed image format',
+            '.jpeg': 'JPEG - Compressed image format',
+            '.png': 'PNG - Lossless compression with transparency',
+            '.gif': 'GIF - Animated images and simple graphics',
+            '.bmp': 'BMP - Uncompressed bitmap format',
+            '.webp': 'WebP - Modern image format by Google',
+            '.tiff': 'TIFF - High-quality image format'
+        }
+        
+        for ext in sorted(self.supported_formats):
+            description = format_descriptions.get(ext, 'Supported image format')
+            formats_table.add_row(ext.upper(), description)
+        
+        self.console.print(formats_table)
+        self.console.print(f"\n[cyan]Maximum file size:[/cyan] {self.max_size_mb} MB")
+        self.console.print("[cyan]Maximum dimension for AI:[/cyan] 1024 pixels")
+
+# Global instance
+_image_handler: Optional[ImageHandler] = None
+
+
+def get_image_handler() -> ImageHandler:
+    """Get or create global image handler"""
+    global _image_handler
+    if _image_handler is None:
+        _image_handler = ImageHandler()
+    return _image_handler
