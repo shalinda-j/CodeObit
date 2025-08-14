@@ -30,7 +30,7 @@ setup(
         "Documentation": "https://github.com/shalinda-j/CodeObit/blob/main/README.md",
         "Source Code": "https://github.com/shalinda-j/CodeObit",
         "Discussions": "https://github.com/shalinda-j/CodeObit/discussions",
-    }
+    },
     packages=find_packages(),
     classifiers=[
         "Development Status :: 5 - Production/Stable",
