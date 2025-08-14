@@ -4,14 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "codeobit"
-version = "1.0.0-beta"
+version = "1.0.0"
 description = "AI-Powered Interactive Development Environment"
 authors = [{name = "codeobit Development Team", email = "dev@codeobit.dev"}]
 license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.11"
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",

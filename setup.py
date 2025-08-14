@@ -18,7 +18,7 @@ with open(requirements_path, "r", encoding="utf-8") as f:
 
 setup(
     name="codeobit",
-    version="1.0.0-beta",
+    version="1.0.0",
     author="CodeObit Development Team",
     author_email="dev@codeobit.dev",
     description="AI-Powered Interactive Development Environment",
@@ -30,10 +30,10 @@ setup(
         "Documentation": "https://github.com/shalinda-j/CodeObit/blob/main/README.md",
         "Source Code": "https://github.com/shalinda-j/CodeObit",
         "Discussions": "https://github.com/shalinda-j/CodeObit/discussions",
-    },
+    }
     packages=find_packages(),
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
