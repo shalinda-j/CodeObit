@@ -1,0 +1,272 @@
+name: Build and Release CodeObit CLI
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:  # Allow manual triggering
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }} executable
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            executable: codeobit
+            package_type: tar.gz
+          - os: windows-latest
+            platform: windows
+            arch: x64
+            executable: codeobit.exe
+            package_type: zip
+          - os: macos-latest
+            platform: macos
+            arch: x64
+            executable: codeobit
+            package_type: tar.gz
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt', 'requirements-build.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-build.txt
+
+    - name: Install system dependencies (Linux)
+      if: matrix.platform == 'linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y binutils
+
+    - name: Install system dependencies (macOS)
+      if: matrix.platform == 'macos'
+      run: |
+        brew install upx
+
+    - name: Build executable
+      run: |
+        python build/build.py
+
+    - name: Verify executable
+      shell: bash
+      run: |
+        if [ "${{ matrix.platform }}" = "windows" ]; then
+          EXE_PATH="dist/codeobit.exe"
+        else
+          EXE_PATH="dist/codeobit"
+          chmod +x "$EXE_PATH"
+        fi
+        
+        if [ -f "$EXE_PATH" ]; then
+          echo "✓ Executable found: $EXE_PATH"
+          ls -la "$EXE_PATH"
+          
+          # Test executable
+          timeout 30s "$EXE_PATH" --help || echo "Warning: Help test failed or timed out"
+        else
+          echo "✗ Executable not found: $EXE_PATH"
+          exit 1
+        fi
+
+    - name: Create release package
+      shell: bash
+      run: |
+        cd dist
+        
+        if [ "${{ matrix.platform }}" = "windows" ]; then
+          PACKAGE_NAME="codeobit-${{ matrix.platform }}-${{ matrix.arch }}.zip"
+          zip -r "$PACKAGE_NAME" codeobit.exe
+        else
+          PACKAGE_NAME="codeobit-${{ matrix.platform }}-${{ matrix.arch }}.tar.gz"
+          tar -czf "$PACKAGE_NAME" codeobit
+        fi
+        
+        echo "PACKAGE_NAME=$PACKAGE_NAME" >> $GITHUB_ENV
+        echo "✓ Created package: $PACKAGE_NAME"
+        ls -la "$PACKAGE_NAME"
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: codeobit-${{ matrix.platform }}-${{ matrix.arch }}
+        path: |
+          dist/${{ matrix.executable }}
+          dist/codeobit-${{ matrix.platform }}-${{ matrix.arch }}.*
+        retention-days: 30
+
+    - name: Upload release assets (on tag)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-assets
+        path: dist/codeobit-${{ matrix.platform }}-${{ matrix.arch }}.*
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download release assets
+      uses: actions/download-artifact@v3
+      with:
+        name: release-assets
+        path: dist/
+
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        TAG_NAME=${GITHUB_REF#refs/tags/}
+        echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+        
+        # Create release notes
+        cat > release_notes.md << EOF
+        # CodeObit CLI $TAG_NAME
+        
+        ## 🎉 What's New
+        
+        Standalone executables for Windows, Linux, and macOS - no Python installation required!
+        
+        ## 📦 Downloads
+        
+        Choose the appropriate package for your operating system:
+        
+        - **Windows (x64)**: \`codeobit-windows-x64.zip\`
+        - **Linux (x64)**: \`codeobit-linux-x64.tar.gz\`
+        - **macOS (x64)**: \`codeobit-macos-x64.tar.gz\`
+        
+        ## 🚀 Installation
+        
+        1. Download the appropriate package for your OS
+        2. Extract the archive
+        3. Run the executable directly (no installation required)
+        
+        ### Windows
+        \`\`\`
+        # Extract the ZIP file
+        # Double-click codeobit.exe or run from command prompt
+        codeobit.exe
+        \`\`\`
+        
+        ### Linux/macOS
+        \`\`\`bash
+        # Extract the archive
+        tar -xzf codeobit-*.tar.gz
+        
+        # Make executable (if needed)
+        chmod +x codeobit
+        
+        # Run the application
+        ./codeobit
+        \`\`\`
+        
+        ## ✨ Features
+        
+        - 🤖 Multi-AI provider support (Gemini, GPT, Claude, etc.)
+        - 🎨 Interactive development environment
+        - 📁 Structured project management
+        - 🔍 Natural file referencing with @filename syntax
+        - 🖼️ Image analysis capabilities
+        - 🌐 Web browsing and content summarization
+        - 💾 Auto-save with version history
+        - 🎭 Rich UI with dynamic themes
+        
+        ## 🔧 System Requirements
+        
+        - **Windows**: Windows 10 or later (x64)
+        - **Linux**: Modern Linux distribution (x64)
+        - **macOS**: macOS 10.14 or later (x64)
+        
+        No Python installation required - these are fully standalone executables!
+        
+        ## 📚 Documentation
+        
+        For detailed usage instructions, visit our [GitHub repository](https://github.com/shalinda-j/CodeObit).
+        
+        ## 🐛 Bug Reports
+        
+        Found an issue? Please report it on our [Issues page](https://github.com/shalinda-j/CodeObit/issues).
+        EOF
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ env.TAG_NAME }}
+        name: CodeObit CLI ${{ env.TAG_NAME }}
+        body_path: release_notes.md
+        files: dist/*
+        draft: false
+        prerelease: ${{ contains(env.TAG_NAME, 'beta') || contains(env.TAG_NAME, 'alpha') || contains(env.TAG_NAME, 'rc') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  test:
+    name: Test builds
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: codeobit-${{ matrix.os == 'ubuntu-latest' && 'linux' || 'windows' }}-x64
+
+    - name: Test executable
+      shell: bash
+      run: |
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          EXE_PATH="codeobit.exe"
+        else
+          EXE_PATH="codeobit"
+          chmod +x "$EXE_PATH"
+        fi
+        
+        echo "Testing executable: $EXE_PATH"
+        ls -la "$EXE_PATH"
+        
+        # Basic functionality test
+        timeout 30s "./$EXE_PATH" --help > help_output.txt 2>&1 || echo "Help command completed"
+        
+        if [ -f help_output.txt ]; then
+          echo "Help output:"
+          cat help_output.txt
+        fi

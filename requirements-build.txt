@@ -1,0 +1,24 @@
+# Build Requirements for CodeObit CLI
+# This file contains dependencies needed for building standalone executables
+
+# PyInstaller for creating executables
+pyinstaller>=6.0.0
+
+# Additional dependencies for building
+setuptools>=68.0.0
+wheel>=0.41.0
+
+# Auto-py-to-exe (optional GUI for PyInstaller)
+auto-py-to-exe>=2.44.0
+
+# UPX for executable compression (optional)
+# Note: UPX binary needs to be installed separately
+# Download from: https://upx.github.io/
+
+# Build tools
+build>=1.0.0
+twine>=4.0.0
+
+# Development dependencies (optional for testing builds)
+pytest>=7.0.0
+pytest-cov>=4.0.0

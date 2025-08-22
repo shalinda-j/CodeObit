@@ -1,0 +1,11 @@
+{
+  "name": "advanced_code_review",
+  "version": "1.0.0",
+  "description": "Advanced AI-powered code review with multi-model analysis",
+  "author": "CodeObit Team",
+  "type": "analyzer",
+  "dependencies": [],
+  "tags": ["code-review", "analysis", "quality"],
+  "entry_point": "AdvancedCodeReviewPlugin",
+  "python_requires": ">=3.11"
+}
