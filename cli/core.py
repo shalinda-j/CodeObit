@@ -23,6 +23,7 @@ from cli.commands.browse import BrowseCommand
 from cli.commands.debug import DebugCommand
 from cli.commands.qa import QACommand
 from cli.commands.database import DatabaseCommand
+from cli.commands.ui import UICommand
 
 class AISoftwareEngineerCLI:
     """Main CLI application class"""
@@ -42,7 +43,8 @@ class AISoftwareEngineerCLI:
             'devops': DevOpsCommand(),
             'debug': DebugCommand(),
             'qa': QACommand(),
-            'database': DatabaseCommand()
+            'database': DatabaseCommand(),
+            'ui': UICommand(),
         }
     
     def create_parser(self):
@@ -115,6 +117,7 @@ class AISoftwareEngineerCLI:
         commands_info = {
             'init': 'Initialize codeobit with API key and configuration',
             'interactive': 'Start conversational AI coding session',
+            'ui': 'Launch the web-based UI',
             'requirements': 'Generate user stories and acceptance criteria',
             'design': 'Create system architecture with MCP patterns',
             'code': 'AI-powered code generation and optimization',
