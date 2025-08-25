@@ -82,6 +82,12 @@ class AISoftwareEngineerCLI:
         interactive_parser.add_argument('--theme', choices=['auto', 'dark', 'light'], 
                                       help='Color theme for interactive mode')
         
+        # Add web UI mode
+        web_parser = subparsers.add_parser('web', help='Start CodeObit Web UI')
+        web_parser.add_argument('--host', default='127.0.0.1', help='Host to bind the server to (default: 127.0.0.1)')
+        web_parser.add_argument('--port', type=int, default=5000, help='Port to bind the server to (default: 5000)')
+        web_parser.add_argument('--debug', action='store_true', help='Enable debug mode')
+        
         return parser
     
     def show_welcome(self):
@@ -115,6 +121,7 @@ class AISoftwareEngineerCLI:
         commands_info = {
             'init': 'Initialize codeobit with API key and configuration',
             'interactive': 'Start conversational AI coding session',
+            'web': 'Launch modern web interface for CodeObit',
             'requirements': 'Generate user stories and acceptance criteria',
             'design': 'Create system architecture with MCP patterns',
             'code': 'AI-powered code generation and optimization',
@@ -217,6 +224,30 @@ class AISoftwareEngineerCLI:
             interactive_cli.color_theme = args.theme
         interactive_cli.start()
     
+    def start_web_ui(self, args):
+        """Start CodeObit Web UI"""
+        from cli.web.app import CodeObitWebApp
+        
+        self.console.print("[bold yellow]Starting CodeObit Web UI...[/bold yellow]")
+        
+        # Print startup information
+        self.console.print(f"\n[bold cyan]🌐 Web UI URL:[/bold cyan] http://{args.host}:{args.port}")
+        self.console.print(f"[bold cyan]🔧 Debug Mode:[/bold cyan] {'Enabled' if args.debug else 'Disabled'}")
+        self.console.print("\n[dim]Press Ctrl+C to stop the server[/dim]\n")
+        
+        try:
+            # Create and run the web application
+            web_app = CodeObitWebApp()
+            web_app.run(
+                host=args.host,
+                port=args.port,
+                debug=args.debug
+            )
+        except KeyboardInterrupt:
+            self.console.print("\n[bold red]Web server stopped by user.[/bold red]")
+        except Exception as e:
+            self.console.print(f"[red]Error starting web server: {e}[/red]")
+    
     def show_help(self, topic=None):
         """Show detailed help information"""
         if topic and topic in self.commands:
@@ -246,6 +277,9 @@ class AISoftwareEngineerCLI:
             return
         elif args.command == 'interactive':
             self.start_interactive_mode(args)
+            return
+        elif args.command == 'web':
+            self.start_web_ui(args)
             return
         elif args.command == 'help':
             self.show_help(args.topic if hasattr(args, 'topic') else None)
