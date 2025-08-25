@@ -147,6 +147,28 @@ Experience "vibe coding" with:
 - Python 3.11+
 - API keys for your preferred AI providers (optional - can be configured interactively)
 
+### 🌐 Web Interface (New!)
+
+CodeObit now includes a **modern web interface** for visual development:
+
+```bash
+# Start web UI (default: http://127.0.0.1:5000)
+python main.py web
+
+# Start on custom port
+python main.py web --port 8080
+
+# Allow external connections
+python main.py web --host 0.0.0.0 --port 8080
+
+# Enable debug mode
+python main.py web --debug
+```
+
+**Features**: Modern dark theme, real-time terminal, project management, quick actions, responsive design, keyboard shortcuts.
+
+**Access**: Open your browser to http://127.0.0.1:5000 (or your custom port)
+
 ### 🔑 Multi-Provider Setup
 
 CodeObit CLI supports **multiple AI providers** with **instant switching** and **interactive setup**. Configure your API keys using environment variables (recommended) or set them up interactively during first use.
@@ -240,6 +262,45 @@ python main.py requirements generate --input description.txt
 python main.py design architecture --input requirements.md --technology "Python/React"
 
 # Generate code
+```
+
+### 🌐 Web Interface
+
+CodeObit also includes a **modern web interface** for a more visual development experience:
+
+#### Starting the Web UI
+
+```bash
+# Start web interface (default: http://127.0.0.1:5000)
+python main.py web
+
+# Start on custom port
+python main.py web --port 8080
+
+# Allow external connections
+python main.py web --host 0.0.0.0 --port 8080
+
+# Enable debug mode
+python main.py web --debug
+```
+
+#### Web UI Features
+
+- **🎨 Modern Dark Theme**: Beautiful gradient UI with smooth animations
+- **💻 Real-time Terminal**: Interactive terminal with command history
+- **📁 Project Management**: Visual project creation and management
+- **⚡ Quick Actions**: One-click access to common commands
+- **📱 Responsive Design**: Works on desktop, tablet, and mobile
+- **🔌 Real-time Communication**: WebSocket-based instant feedback
+- **⌨️ Keyboard Shortcuts**: Power user navigation shortcuts
+
+#### Access the Web UI
+
+Once started, open your browser to:
+- **Local**: http://127.0.0.1:5000
+- **Network**: http://your-server-ip:port
+
+For detailed web UI documentation, see [cli/web/README.md](cli/web/README.md).
 python main.py code generate --input "Create user auth API" --language Python
 
 # Create tests
