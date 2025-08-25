@@ -11,6 +11,8 @@ recursive-include cli *.py
 recursive-include cli *.yaml
 recursive-include cli *.json
 recursive-include cli *.txt
+recursive-include cli/ui/templates *.html
+recursive-include cli/ui/static *
 
 # Include configuration files
 recursive-include config *.yaml

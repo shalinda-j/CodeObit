@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CodeObit UI</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <main>
+      <h1>CodeObit Web UI</h1>
+      <form id="run-form">
+        <label>
+          Command
+          <input id="command" name="command" placeholder="requirements" />
+        </label>
+        <label>
+          Args (space separated)
+          <input id="args" name="args" placeholder="analyze --input README.md" />
+        </label>
+        <button type="submit">Run</button>
+      </form>
+      <pre id="output"></pre>
+    </main>
+    <script>
+      const form = document.getElementById('run-form');
+      const output = document.getElementById('output');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const command = document.getElementById('command').value.trim();
+        const args = document.getElementById('args').value.trim().split(/\s+/).filter(Boolean);
+        output.textContent = 'Running...';
+        const res = await fetch('/api/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command, args })
+        });
+        const data = await res.json();
+        output.textContent = JSON.stringify(data, null, 2);
+      });
+    </script>
+  </body>
+  </html>
+
