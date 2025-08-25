@@ -143,6 +143,11 @@ Experience "vibe coding" with:
 
 ## 🚀 Quick Start
 
+CodeObit offers **two powerful interfaces** - a feature-rich CLI and a modern Web UI:
+
+### 🖥️ **CLI Interface** - Full-featured command-line experience
+### 🌐 **Web UI** - Modern browser-based interface with visual project management
+
 ### Prerequisites
 - Python 3.11+
 - API keys for your preferred AI providers (optional - can be configured interactively)
@@ -202,7 +207,7 @@ python main.py interactive
 !qwen    # Launches Qwen setup if not configured
 ```
 
-### Setup
+### 🖥️ CLI Setup
 1. **Optional: Configure API keys** (see above) - or skip and set up interactively
 2. **Initialize the CLI** (creates project structure):
    ```bash
@@ -214,6 +219,45 @@ python main.py interactive
    # or use the shortcut
    python gemini
    ```
+
+### 🌐 Web UI Setup
+Experience CodeObit through a modern, intuitive web interface:
+
+1. **Quick Start** (Easiest method):
+   ```bash
+   python start_ui.py
+   ```
+   This automatically:
+   - Checks dependencies
+   - Starts the web server
+   - Opens your browser to http://localhost:5000
+
+2. **Advanced Setup**:
+   ```bash
+   # Custom host/port
+   python start_ui.py --host 0.0.0.0 --port 8080
+   
+   # Debug mode
+   python start_ui.py --debug
+   
+   # Don't open browser automatically
+   python start_ui.py --no-browser
+   
+   # Just check dependencies
+   python start_ui.py --check-deps
+   ```
+
+3. **Manual Setup**:
+   ```bash
+   python web_app.py --host localhost --port 5000
+   ```
+
+**🎉 That's it!** The Web UI provides:
+- 🎯 **Visual Project Management** - Create, organize, and manage projects
+- 💬 **Interactive AI Chat** - Real-time conversations with multiple AI providers
+- 📁 **File Explorer** - Browse, edit, and manage your code files
+- ⚙️ **Settings Panel** - Configure AI providers, themes, and preferences
+- 📊 **Dashboard** - Overview of projects, activity, and system status
 
 ### Interactive Mode Examples
 

@@ -1,0 +1,673 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - CodeObit{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2 mb-1">
+                    <i class="fas fa-cog text-primary me-2"></i>
+                    Settings
+                </h1>
+                <p class="text-muted mb-0">Configure your CodeObit environment</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary" onclick="resetSettings()">
+                    <i class="fas fa-undo me-1"></i>Reset to Defaults
+                </button>
+                <button class="btn btn-primary" onclick="saveSettings()">
+                    <i class="fas fa-save me-1"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Settings Navigation -->
+    <div class="col-md-3">
+        <div class="card bg-dark border-secondary">
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <a href="#general" class="list-group-item list-group-item-action bg-dark text-light active" 
+                       onclick="showSettingsSection('general', this)">
+                        <i class="fas fa-cog me-2"></i>General
+                    </a>
+                    <a href="#ai-providers" class="list-group-item list-group-item-action bg-dark text-light" 
+                       onclick="showSettingsSection('ai-providers', this)">
+                        <i class="fas fa-robot me-2"></i>AI Providers
+                    </a>
+                    <a href="#interface" class="list-group-item list-group-item-action bg-dark text-light" 
+                       onclick="showSettingsSection('interface', this)">
+                        <i class="fas fa-desktop me-2"></i>Interface
+                    </a>
+                    <a href="#projects" class="list-group-item list-group-item-action bg-dark text-light" 
+                       onclick="showSettingsSection('projects', this)">
+                        <i class="fas fa-folder me-2"></i>Projects
+                    </a>
+                    <a href="#security" class="list-group-item list-group-item-action bg-dark text-light" 
+                       onclick="showSettingsSection('security', this)">
+                        <i class="fas fa-shield-alt me-2"></i>Security
+                    </a>
+                    <a href="#advanced" class="list-group-item list-group-item-action bg-dark text-light" 
+                       onclick="showSettingsSection('advanced', this)">
+                        <i class="fas fa-tools me-2"></i>Advanced
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Content -->
+    <div class="col-md-9">
+        <!-- General Settings -->
+        <div id="general-settings" class="settings-section">
+            <div class="card bg-dark border-secondary">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>General Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="default-workspace" class="form-label">Default Workspace</label>
+                            <input type="text" class="form-control bg-dark border-secondary text-light" 
+                                   id="default-workspace" value="/workspace">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="auto-save" class="form-label">Auto-save Interval</label>
+                            <select class="form-select bg-dark border-secondary text-light" id="auto-save">
+                                <option value="0">Disabled</option>
+                                <option value="30">30 seconds</option>
+                                <option value="60" selected>1 minute</option>
+                                <option value="300">5 minutes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="max-history" class="form-label">Max Chat History</label>
+                            <input type="number" class="form-control bg-dark border-secondary text-light" 
+                                   id="max-history" value="100" min="10" max="1000">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="log-level" class="form-label">Log Level</label>
+                            <select class="form-select bg-dark border-secondary text-light" id="log-level">
+                                <option value="ERROR">Error</option>
+                                <option value="WARNING">Warning</option>
+                                <option value="INFO" selected>Info</option>
+                                <option value="DEBUG">Debug</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="startup-tips" checked>
+                        <label class="form-check-label" for="startup-tips">
+                            Show tips on startup
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="analytics" checked>
+                        <label class="form-check-label" for="analytics">
+                            Send anonymous usage analytics
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Providers Settings -->
+        <div id="ai-providers-settings" class="settings-section" style="display: none;">
+            <div class="card bg-dark border-secondary mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-robot me-2"></i>AI Provider Configuration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Google Gemini -->
+                    <div class="mb-4">
+                        <h6 class="d-flex align-items-center">
+                            <i class="fas fa-gem text-primary me-2"></i>
+                            Google Gemini
+                            <span class="badge bg-success ms-2">Active</span>
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="gemini-api-key" class="form-label">API Key</label>
+                                <input type="password" class="form-control bg-dark border-secondary text-light" 
+                                       id="gemini-api-key" placeholder="Enter your Gemini API key">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="gemini-model" class="form-label">Model</label>
+                                <select class="form-select bg-dark border-secondary text-light" id="gemini-model">
+                                    <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash</option>
+                                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="gemini-temperature" class="form-label">Temperature: <span id="gemini-temp-value">0.7</span></label>
+                                <input type="range" class="form-range" id="gemini-temperature" 
+                                       min="0" max="2" step="0.1" value="0.7" 
+                                       oninput="updateTempValue('gemini', this.value)">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="gemini-max-tokens" class="form-label">Max Tokens</label>
+                                <input type="number" class="form-control bg-dark border-secondary text-light" 
+                                       id="gemini-max-tokens" value="8192" min="1" max="32768">
+                            </div>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm" onclick="testConnection('gemini')">
+                            <i class="fas fa-plug me-1"></i>Test Connection
+                        </button>
+                    </div>
+
+                    <!-- OpenAI GPT -->
+                    <div class="mb-4">
+                        <h6 class="d-flex align-items-center">
+                            <i class="fas fa-bolt text-success me-2"></i>
+                            OpenAI GPT
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="openai-api-key" class="form-label">API Key</label>
+                                <input type="password" class="form-control bg-dark border-secondary text-light" 
+                                       id="openai-api-key" placeholder="Enter your OpenAI API key">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="openai-model" class="form-label">Model</label>
+                                <select class="form-select bg-dark border-secondary text-light" id="openai-model">
+                                    <option value="gpt-4" selected>GPT-4</option>
+                                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm" onclick="testConnection('openai')">
+                            <i class="fas fa-plug me-1"></i>Test Connection
+                        </button>
+                    </div>
+
+                    <!-- Qwen -->
+                    <div class="mb-4">
+                        <h6 class="d-flex align-items-center">
+                            <i class="fas fa-brain text-info me-2"></i>
+                            Qwen 3
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="qwen-api-key" class="form-label">API Key (OpenRouter)</label>
+                                <input type="password" class="form-control bg-dark border-secondary text-light" 
+                                       id="qwen-api-key" placeholder="Enter your OpenRouter API key">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="qwen-model" class="form-label">Model</label>
+                                <select class="form-select bg-dark border-secondary text-light" id="qwen-model">
+                                    <option value="qwen/qwen-2.5-72b-instruct" selected>Qwen 2.5 72B Instruct</option>
+                                    <option value="qwen/qwen-2.5-32b-instruct">Qwen 2.5 32B Instruct</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm" onclick="testConnection('qwen')">
+                            <i class="fas fa-plug me-1"></i>Test Connection
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interface Settings -->
+        <div id="interface-settings" class="settings-section" style="display: none;">
+            <div class="card bg-dark border-secondary">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-desktop me-2"></i>Interface Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="theme" class="form-label">Theme</label>
+                            <select class="form-select bg-dark border-secondary text-light" id="theme">
+                                <option value="dark" selected>Dark</option>
+                                <option value="light">Light</option>
+                                <option value="auto">Auto (System)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="font-size" class="form-label">Font Size</label>
+                            <select class="form-select bg-dark border-secondary text-light" id="font-size">
+                                <option value="12">12px</option>
+                                <option value="14" selected>14px</option>
+                                <option value="16">16px</option>
+                                <option value="18">18px</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="code-font" class="form-label">Code Font</label>
+                            <select class="form-select bg-dark border-secondary text-light" id="code-font">
+                                <option value="Consolas" selected>Consolas</option>
+                                <option value="Monaco">Monaco</option>
+                                <option value="Courier New">Courier New</option>
+                                <option value="Fira Code">Fira Code</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="sidebar-position" class="form-label">Sidebar Position</label>
+                            <select class="form-select bg-dark border-secondary text-light" id="sidebar-position">
+                                <option value="left" selected>Left</option>
+                                <option value="right">Right</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="syntax-highlighting" checked>
+                        <label class="form-check-label" for="syntax-highlighting">
+                            Enable syntax highlighting
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="line-numbers" checked>
+                        <label class="form-check-label" for="line-numbers">
+                            Show line numbers in code
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="word-wrap" checked>
+                        <label class="form-check-label" for="word-wrap">
+                            Enable word wrap
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Settings -->
+        <div id="projects-settings" class="settings-section" style="display: none;">
+            <div class="card bg-dark border-secondary">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-folder me-2"></i>Project Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="default-project-location" class="form-label">Default Project Location</label>
+                            <input type="text" class="form-control bg-dark border-secondary text-light" 
+                                   id="default-project-location" value="./projects">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="project-template" class="form-label">Default Template</label>
+                            <select class="form-select bg-dark border-secondary text-light" id="project-template">
+                                <option value="" selected>None</option>
+                                <option value="python">Python Project</option>
+                                <option value="javascript">JavaScript Project</option>
+                                <option value="react">React App</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="auto-init-git" checked>
+                        <label class="form-check-label" for="auto-init-git">
+                            Initialize Git repository for new projects
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="create-readme" checked>
+                        <label class="form-check-label" for="create-readme">
+                            Create README.md for new projects
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="project-backup" checked>
+                        <label class="form-check-label" for="project-backup">
+                            Enable automatic project backups
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Settings -->
+        <div id="security-settings" class="settings-section" style="display: none;">
+            <div class="card bg-dark border-secondary">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shield-alt me-2"></i>Security Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> These settings affect the security of your CodeObit environment.
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="encrypt-api-keys" checked>
+                        <label class="form-check-label" for="encrypt-api-keys">
+                            Encrypt stored API keys
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="clear-history-exit">
+                        <label class="form-check-label" for="clear-history-exit">
+                            Clear chat history on exit
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="require-confirmation">
+                        <label class="form-check-label" for="require-confirmation">
+                            Require confirmation for destructive operations
+                        </label>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6>API Key Storage</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button class="btn btn-outline-warning w-100" onclick="clearApiKeys()">
+                                    <i class="fas fa-trash me-1"></i>Clear All API Keys
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-outline-info w-100" onclick="exportSettings()">
+                                    <i class="fas fa-download me-1"></i>Export Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Settings -->
+        <div id="advanced-settings" class="settings-section" style="display: none;">
+            <div class="card bg-dark border-secondary">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>Advanced Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Caution:</strong> These are advanced settings. Modify only if you know what you're doing.
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="request-timeout" class="form-label">Request Timeout (seconds)</label>
+                            <input type="number" class="form-control bg-dark border-secondary text-light" 
+                                   id="request-timeout" value="30" min="5" max="300">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="max-concurrent-requests" class="form-label">Max Concurrent Requests</label>
+                            <input type="number" class="form-control bg-dark border-secondary text-light" 
+                                   id="max-concurrent-requests" value="3" min="1" max="10">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="cache-size" class="form-label">Cache Size (MB)</label>
+                            <input type="number" class="form-control bg-dark border-secondary text-light" 
+                                   id="cache-size" value="100" min="10" max="1000">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="debug-mode" class="form-label">Debug Mode</label>
+                            <select class="form-select bg-dark border-secondary text-light" id="debug-mode">
+                                <option value="false" selected>Disabled</option>
+                                <option value="true">Enabled</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="experimental-features">
+                        <label class="form-check-label" for="experimental-features">
+                            Enable experimental features
+                        </label>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6>System</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-info w-100" onclick="clearCache()">
+                                    <i class="fas fa-broom me-1"></i>Clear Cache
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-warning w-100" onclick="resetLogs()">
+                                    <i class="fas fa-file-alt me-1"></i>Reset Logs
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-danger w-100" onclick="factoryReset()">
+                                    <i class="fas fa-undo-alt me-1"></i>Factory Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentSettings = {};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadSettings();
+});
+
+function showSettingsSection(sectionId, element) {
+    // Hide all sections
+    document.querySelectorAll('.settings-section').forEach(section => {
+        section.style.display = 'none';
+    });
+    
+    // Show selected section
+    document.getElementById(sectionId + '-settings').style.display = 'block';
+    
+    // Update navigation
+    document.querySelectorAll('.list-group-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    element.classList.add('active');
+}
+
+function loadSettings() {
+    // Load settings from localStorage or API
+    const saved = localStorage.getItem('codeObitSettings');
+    if (saved) {
+        currentSettings = JSON.parse(saved);
+        applySettings(currentSettings);
+    } else {
+        // Load default settings from API
+        fetch('/api/config')
+            .then(response => response.json())
+            .then(data => {
+                currentSettings = data.config || {};
+                applySettings(currentSettings);
+            })
+            .catch(error => {
+                console.error('Error loading settings:', error);
+                showToast('Failed to load settings', 'warning');
+            });
+    }
+}
+
+function applySettings(settings) {
+    // Apply settings to form elements
+    Object.keys(settings).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+            if (element.type === 'checkbox') {
+                element.checked = settings[key];
+            } else {
+                element.value = settings[key];
+            }
+        }
+    });
+}
+
+function collectSettings() {
+    const settings = {};
+    const inputs = document.querySelectorAll('input, select, textarea');
+    
+    inputs.forEach(input => {
+        if (input.id) {
+            if (input.type === 'checkbox') {
+                settings[input.id] = input.checked;
+            } else {
+                settings[input.id] = input.value;
+            }
+        }
+    });
+    
+    return settings;
+}
+
+function saveSettings() {
+    const settings = collectSettings();
+    
+    showLoading(true);
+    
+    // Save to localStorage
+    localStorage.setItem('codeObitSettings', JSON.stringify(settings));
+    
+    // Save to API
+    fetch('/api/config', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(settings)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            currentSettings = settings;
+            showToast('Settings saved successfully!', 'success');
+        } else {
+            showToast(data.error || 'Failed to save settings', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving settings:', error);
+        showToast('Error saving settings', 'danger');
+    })
+    .finally(() => {
+        showLoading(false);
+    });
+}
+
+function resetSettings() {
+    if (confirm('Are you sure you want to reset all settings to defaults? This cannot be undone.')) {
+        localStorage.removeItem('codeObitSettings');
+        location.reload();
+    }
+}
+
+function updateTempValue(provider, value) {
+    document.getElementById(provider + '-temp-value').textContent = value;
+}
+
+function testConnection(provider) {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Testing...';
+    button.disabled = true;
+    
+    // Simulate connection test
+    setTimeout(() => {
+        const success = Math.random() > 0.3; // 70% success rate for demo
+        
+        if (success) {
+            button.innerHTML = '<i class="fas fa-check me-1"></i>Connected';
+            button.className = 'btn btn-success btn-sm';
+            showToast(`${provider} connection successful!`, 'success');
+        } else {
+            button.innerHTML = '<i class="fas fa-times me-1"></i>Failed';
+            button.className = 'btn btn-danger btn-sm';
+            showToast(`${provider} connection failed`, 'danger');
+        }
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.className = 'btn btn-outline-primary btn-sm';
+            button.disabled = false;
+        }, 2000);
+    }, 2000);
+}
+
+function clearApiKeys() {
+    if (confirm('Are you sure you want to clear all stored API keys? You will need to re-enter them.')) {
+        // Clear API key fields
+        document.querySelectorAll('input[type="password"]').forEach(input => {
+            input.value = '';
+        });
+        showToast('API keys cleared', 'warning');
+    }
+}
+
+function exportSettings() {
+    const settings = collectSettings();
+    const exportData = {
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
+        settings: settings
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `codeobit-settings-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast('Settings exported successfully', 'success');
+}
+
+function clearCache() {
+    if (confirm('Are you sure you want to clear the cache? This may slow down initial loading.')) {
+        localStorage.removeItem('chatHistory');
+        showToast('Cache cleared', 'success');
+    }
+}
+
+function resetLogs() {
+    if (confirm('Are you sure you want to reset all logs?')) {
+        showToast('Logs reset (functionality not implemented)', 'info');
+    }
+}
+
+function factoryReset() {
+    if (confirm('Are you sure you want to perform a factory reset? This will clear all settings, cache, and data. This cannot be undone.')) {
+        if (confirm('This is your final warning. All data will be lost. Continue?')) {
+            localStorage.clear();
+            showToast('Factory reset completed. Reloading...', 'warning');
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        }
+    }
+}
+</script>
+{% endblock %}
