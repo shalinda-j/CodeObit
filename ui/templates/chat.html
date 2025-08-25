@@ -1,0 +1,488 @@
+{% extends "base.html" %}
+
+{% block title %}AI Chat - CodeObit{% endblock %}
+
+{% block content %}
+<div class="row h-100">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2 mb-1">
+                    <i class="fas fa-comments text-primary me-2"></i>
+                    AI Chat
+                </h1>
+                <p class="text-muted mb-0">Interactive conversation with AI providers</p>
+            </div>
+            <div class="d-flex gap-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="providerSelect" data-bs-toggle="dropdown">
+                        <i class="fas fa-robot me-1"></i>
+                        <span id="current-provider">Gemini</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" href="#" onclick="switchProvider('gemini')">
+                            <i class="fas fa-gem me-2"></i>Google Gemini
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="switchProvider('qwen')">
+                            <i class="fas fa-brain me-2"></i>Qwen 3
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="switchProvider('openai')">
+                            <i class="fas fa-bolt me-2"></i>OpenAI GPT
+                        </a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-outline-secondary" onclick="clearChat()">
+                    <i class="fas fa-trash me-1"></i>Clear Chat
+                </button>
+                <button class="btn btn-outline-info" onclick="exportChat()">
+                    <i class="fas fa-download me-1"></i>Export
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row flex-grow-1">
+    <div class="col-12">
+        <div class="card bg-dark border-secondary h-100 d-flex flex-column">
+            <!-- Chat Messages -->
+            <div class="card-body flex-grow-1 d-flex flex-column">
+                <div id="chat-messages" class="flex-grow-1 overflow-auto mb-3" style="min-height: 400px;">
+                    <div id="welcome-message" class="text-center text-muted py-5">
+                        <i class="fas fa-robot fa-3x mb-3"></i>
+                        <h4>Welcome to CodeObit AI Chat</h4>
+                        <p>Start a conversation with your AI assistant. You can:</p>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-code me-2"></i>Generate and review code</li>
+                            <li><i class="fas fa-file-alt me-2"></i>Reference files with @filename.py</li>
+                            <li><i class="fas fa-image me-2"></i>Analyze images and diagrams</li>
+                            <li><i class="fas fa-globe me-2"></i>Browse and summarize web content</li>
+                            <li><i class="fas fa-question me-2"></i>Ask technical questions</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Chat Input -->
+                <div class="border-top border-secondary pt-3">
+                    <div class="row">
+                        <div class="col">
+                            <div class="input-group">
+                                <button class="btn btn-outline-secondary" type="button" onclick="showFileSelector()">
+                                    <i class="fas fa-paperclip"></i>
+                                </button>
+                                <textarea 
+                                    id="chat-input" 
+                                    class="form-control bg-dark border-secondary text-light" 
+                                    placeholder="Type your message... Use @filename.py to reference files"
+                                    rows="2"
+                                    onkeydown="handleInputKeydown(event)"></textarea>
+                                <button class="btn btn-primary" type="button" onclick="sendMessage()" id="send-button">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                            <div class="form-text text-muted small mt-1">
+                                Press <kbd>Ctrl+Enter</kbd> to send • Use <kbd>@</kbd> for file references
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- File Selector Modal -->
+<div class="modal fade" id="fileSelectorModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-code me-2"></i>Select Files to Reference
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control bg-dark border-secondary text-light" 
+                           id="file-search" placeholder="Search files...">
+                </div>
+                <div id="file-list" style="max-height: 300px; overflow-y: auto;">
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                        <div>Loading files...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="insertSelectedFiles()">Insert References</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Upload Modal -->
+<div class="modal fade" id="imageUploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">
+                    <i class="fas fa-image me-2"></i>Upload Image
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="file" class="form-control bg-dark border-secondary text-light" 
+                           id="image-upload" accept="image/*">
+                </div>
+                <div id="image-preview" class="text-center d-none">
+                    <img id="preview-image" class="img-fluid rounded" style="max-height: 200px;">
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="uploadImage()">Upload & Analyze</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentProvider = 'gemini';
+let selectedFiles = [];
+let chatHistory = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeChat();
+    loadChatHistory();
+});
+
+function initializeChat() {
+    // Initialize Socket.IO connection
+    if (typeof io !== 'undefined') {
+        const socket = io();
+        
+        socket.on('connect', function() {
+            console.log('Connected to server');
+            showToast('Connected to CodeObit', 'success');
+        });
+        
+        socket.on('chat_response', function(data) {
+            addMessage(data.response, 'assistant', data.provider);
+            document.getElementById('send-button').disabled = false;
+            document.getElementById('send-button').innerHTML = '<i class="fas fa-paper-plane"></i>';
+        });
+        
+        socket.on('error', function(data) {
+            showToast(data.message, 'danger');
+            document.getElementById('send-button').disabled = false;
+            document.getElementById('send-button').innerHTML = '<i class="fas fa-paper-plane"></i>';
+        });
+        
+        window.socket = socket;
+    }
+}
+
+function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message to chat
+    addMessage(message, 'user');
+    
+    // Clear input
+    input.value = '';
+    
+    // Disable send button and show loading
+    const sendButton = document.getElementById('send-button');
+    sendButton.disabled = true;
+    sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    // Hide welcome message
+    const welcomeMessage = document.getElementById('welcome-message');
+    if (welcomeMessage) {
+        welcomeMessage.style.display = 'none';
+    }
+    
+    // Send message via Socket.IO if available, otherwise use HTTP
+    if (window.socket && window.socket.connected) {
+        window.socket.emit('chat_message', {
+            message: message,
+            provider: currentProvider
+        });
+    } else {
+        // Fallback to HTTP request
+        fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message,
+                provider: currentProvider
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            addMessage(data.response, 'assistant', data.provider);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            addMessage('Sorry, I encountered an error processing your message.', 'assistant', 'error');
+            showToast('Error sending message', 'danger');
+        })
+        .finally(() => {
+            sendButton.disabled = false;
+            sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        });
+    }
+    
+    // Save to history
+    chatHistory.push({
+        message: message,
+        type: 'user',
+        timestamp: new Date().toISOString()
+    });
+    saveChatHistory();
+}
+
+function addMessage(content, type, provider = null) {
+    const messagesContainer = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type} mb-3`;
+    
+    const timestamp = new Date().toLocaleTimeString();
+    
+    if (type === 'user') {
+        messageDiv.innerHTML = `
+            <div class="d-flex justify-content-end">
+                <div class="message-content bg-primary text-white rounded p-3" style="max-width: 80%;">
+                    <div class="message-text">${escapeHtml(content)}</div>
+                    <div class="message-time text-end small opacity-75 mt-1">${timestamp}</div>
+                </div>
+                <div class="message-avatar ms-2">
+                    <i class="fas fa-user-circle fa-2x text-primary"></i>
+                </div>
+            </div>
+        `;
+    } else {
+        const providerIcon = getProviderIcon(provider);
+        const providerColor = getProviderColor(provider);
+        
+        messageDiv.innerHTML = `
+            <div class="d-flex">
+                <div class="message-avatar me-2">
+                    <i class="fas ${providerIcon} fa-2x ${providerColor}"></i>
+                </div>
+                <div class="message-content bg-secondary rounded p-3" style="max-width: 80%;">
+                    <div class="message-header d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">${provider || 'AI Assistant'}</span>
+                        <span class="small text-muted">${timestamp}</span>
+                    </div>
+                    <div class="message-text">${formatMessage(content)}</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    // Apply syntax highlighting
+    if (type === 'assistant') {
+        Prism.highlightAllUnder(messageDiv);
+    }
+    
+    // Save to history
+    if (type === 'assistant') {
+        chatHistory.push({
+            message: content,
+            type: 'assistant',
+            provider: provider,
+            timestamp: new Date().toISOString()
+        });
+        saveChatHistory();
+    }
+}
+
+function formatMessage(content) {
+    // Convert code blocks
+    content = content.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
+    
+    // Convert inline code
+    content = content.replace(/`([^`]+)`/g, '<code class="bg-dark px-1 rounded">$1</code>');
+    
+    // Convert newlines to breaks
+    content = content.replace(/\n/g, '<br>');
+    
+    return content;
+}
+
+function getProviderIcon(provider) {
+    switch (provider) {
+        case 'gemini': return 'fa-gem';
+        case 'qwen': return 'fa-brain';
+        case 'openai': return 'fa-bolt';
+        default: return 'fa-robot';
+    }
+}
+
+function getProviderColor(provider) {
+    switch (provider) {
+        case 'gemini': return 'text-primary';
+        case 'qwen': return 'text-info';
+        case 'openai': return 'text-success';
+        default: return 'text-secondary';
+    }
+}
+
+function switchProvider(provider) {
+    currentProvider = provider;
+    document.getElementById('current-provider').textContent = provider.charAt(0).toUpperCase() + provider.slice(1);
+    showToast(`Switched to ${provider}`, 'info');
+}
+
+function handleInputKeydown(event) {
+    if (event.ctrlKey && event.key === 'Enter') {
+        event.preventDefault();
+        sendMessage();
+    }
+}
+
+function clearChat() {
+    if (confirm('Are you sure you want to clear the chat history?')) {
+        document.getElementById('chat-messages').innerHTML = 
+            '<div id="welcome-message" class="text-center text-muted py-5"><i class="fas fa-robot fa-3x mb-3"></i><h4>Chat cleared</h4><p>Start a new conversation!</p></div>';
+        chatHistory = [];
+        saveChatHistory();
+        showToast('Chat cleared', 'success');
+    }
+}
+
+function exportChat() {
+    if (chatHistory.length === 0) {
+        showToast('No chat history to export', 'warning');
+        return;
+    }
+    
+    const exportData = {
+        provider: currentProvider,
+        timestamp: new Date().toISOString(),
+        messages: chatHistory
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `codeobit-chat-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast('Chat exported successfully', 'success');
+}
+
+function showFileSelector() {
+    const modal = new bootstrap.Modal(document.getElementById('fileSelectorModal'));
+    modal.show();
+    loadFileList();
+}
+
+function loadFileList() {
+    // This would load actual file list from the server
+    // For now, showing placeholder
+    document.getElementById('file-list').innerHTML = `
+        <div class="text-center text-muted py-4">
+            <i class="fas fa-folder-open fa-2x mb-3"></i>
+            <div>File browser coming soon...</div>
+        </div>
+    `;
+}
+
+function insertSelectedFiles() {
+    // This would insert selected file references
+    const modal = bootstrap.Modal.getInstance(document.getElementById('fileSelectorModal'));
+    modal.hide();
+}
+
+function saveChatHistory() {
+    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    localStorage.setItem('chatCount', chatHistory.filter(m => m.type === 'user').length.toString());
+}
+
+function loadChatHistory() {
+    const saved = localStorage.getItem('chatHistory');
+    if (saved) {
+        chatHistory = JSON.parse(saved);
+        // Restore messages
+        const welcomeMessage = document.getElementById('welcome-message');
+        if (chatHistory.length > 0 && welcomeMessage) {
+            welcomeMessage.style.display = 'none';
+        }
+        
+        chatHistory.forEach(item => {
+            addMessageFromHistory(item.message, item.type, item.provider);
+        });
+    }
+}
+
+function addMessageFromHistory(content, type, provider) {
+    const messagesContainer = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type} mb-3`;
+    
+    if (type === 'user') {
+        messageDiv.innerHTML = `
+            <div class="d-flex justify-content-end">
+                <div class="message-content bg-primary text-white rounded p-3" style="max-width: 80%;">
+                    <div class="message-text">${escapeHtml(content)}</div>
+                </div>
+                <div class="message-avatar ms-2">
+                    <i class="fas fa-user-circle fa-2x text-primary"></i>
+                </div>
+            </div>
+        `;
+    } else {
+        const providerIcon = getProviderIcon(provider);
+        const providerColor = getProviderColor(provider);
+        
+        messageDiv.innerHTML = `
+            <div class="d-flex">
+                <div class="message-avatar me-2">
+                    <i class="fas ${providerIcon} fa-2x ${providerColor}"></i>
+                </div>
+                <div class="message-content bg-secondary rounded p-3" style="max-width: 80%;">
+                    <div class="message-header d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">${provider || 'AI Assistant'}</span>
+                    </div>
+                    <div class="message-text">${formatMessage(content)}</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    messagesContainer.appendChild(messageDiv);
+    
+    // Apply syntax highlighting
+    if (type === 'assistant') {
+        Prism.highlightAllUnder(messageDiv);
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}
