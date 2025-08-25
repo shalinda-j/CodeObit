@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  codeobit-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.ui
+    container_name: codeobit-ui
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - DEBUG=False
+      - PORT=5000
+      # Add your API keys here or use .env file
+      # - GEMINI_API_KEY=your_key_here
+      # - OPENAI_API_KEY=your_key_here
+    volumes:
+      - ./projects:/app/projects
+      - ./uploads:/app/uploads
+      - ./config:/app/config
+    restart: unless-stopped
+    networks:
+      - codeobit-network
+
+  # Optional: Add a database service if needed
+  # postgres:
+  #   image: postgres:15
+  #   container_name: codeobit-db
+  #   environment:
+  #     - POSTGRES_DB=codeobit
+  #     - POSTGRES_USER=codeobit
+  #     - POSTGRES_PASSWORD=secure_password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - codeobit-network
+
+networks:
+  codeobit-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

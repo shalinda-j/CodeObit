@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeObit - AI-Powered Development Environment</title>
+    
+    <!-- Material-UI and React -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    
+    <!-- Custom styles -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', 'Segoe UI', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .app-container {
+            display: flex;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        
+        .logo-text {
+            font-size: 24px;
+            font-weight: 500;
+        }
+        
+        .menu-section {
+            margin-bottom: 25px;
+        }
+        
+        .menu-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .menu-item:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateX(5px);
+        }
+        
+        .menu-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .menu-icon {
+            margin-right: 12px;
+            font-size: 20px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .header-title {
+            font-size: 24px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        
+        /* Chat Interface */
+        .chat-container {
+            background: white;
+            border-radius: 12px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+        }
+        
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .provider-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .provider-chip {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        .provider-chip.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+        
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .user-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .ai-avatar {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+        }
+        
+        .message-content {
+            flex: 1;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .message-content pre {
+            background: #2c3e50;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        .message-content code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .chat-input-container {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            background: white;
+        }
+        
+        .chat-input-wrapper {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 14px;
+            resize: none;
+            min-height: 50px;
+            max-height: 150px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .input-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        .action-btn:hover {
+            background: #e0e0e0;
+            transform: scale(1.1);
+        }
+        
+        .send-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .send-btn:hover {
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* Command Palette */
+        .command-palette {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+        }
+        
+        .command-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .command-card {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .command-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        
+        .command-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .command-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .command-desc {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* Terminal */
+        .terminal-container {
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 20px;
+            color: #f8f8f2;
+            font-family: 'Courier New', monospace;
+            height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.2);
+        }
+        
+        .terminal-line {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .terminal-prompt {
+            color: #50fa7b;
+            margin-right: 10px;
+        }
+        
+        .terminal-input {
+            background: transparent;
+            border: none;
+            color: #f8f8f2;
+            outline: none;
+            flex: 1;
+            font-family: inherit;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+                padding: 10px;
+            }
+            
+            .logo-text,
+            .menu-item span {
+                display: none;
+            }
+            
+            .menu-icon {
+                margin: 0;
+            }
+            
+            .content-area {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <!-- React and dependencies -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    
+    <!-- Main React App -->
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        
+        function CodeObitUI() {
+            const [activeView, setActiveView] = useState('chat');
+            const [messages, setMessages] = useState([]);
+            const [inputValue, setInputValue] = useState('');
+            const [provider, setProvider] = useState('gemini');
+            const [isLoading, setIsLoading] = useState(false);
+            const [socket, setSocket] = useState(null);
+            const messagesEndRef = useRef(null);
+            
+            useEffect(() => {
+                // Initialize WebSocket connection
+                const newSocket = io('http://localhost:5000');
+                
+                newSocket.on('connect', () => {
+                    console.log('Connected to server');
+                });
+                
+                newSocket.on('chat_response', (data) => {
+                    setMessages(prev => [...prev, {
+                        type: 'ai',
+                        content: data.response,
+                        timestamp: data.timestamp
+                    }]);
+                    setIsLoading(false);
+                });
+                
+                newSocket.on('command_output', (data) => {
+                    console.log('Command output:', data.output);
+                });
+                
+                setSocket(newSocket);
+                
+                return () => newSocket.close();
+            }, []);
+            
+            useEffect(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, [messages]);
+            
+            const sendMessage = () => {
+                if (!inputValue.trim() || !socket) return;
+                
+                // Add user message
+                setMessages(prev => [...prev, {
+                    type: 'user',
+                    content: inputValue,
+                    timestamp: new Date().toISOString()
+                }]);
+                
+                // Send to server
+                socket.emit('chat_message', {
+                    message: inputValue,
+                    provider: provider
+                });
+                
+                setInputValue('');
+                setIsLoading(true);
+            };
+            
+            const executeCommand = async (command) => {
+                try {
+                    const response = await fetch('/api/execute', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            command: command,
+                            params: {}
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        setMessages(prev => [...prev, {
+                            type: 'system',
+                            content: `Command executed: ${command}`,
+                            result: data.result,
+                            timestamp: data.timestamp
+                        }]);
+                    } else {
+                        console.error('Command failed:', data.error);
+                    }
+                } catch (error) {
+                    console.error('Error executing command:', error);
+                }
+            };
+            
+            const menuItems = [
+                { id: 'chat', icon: '💬', label: 'AI Chat', section: 'main' },
+                { id: 'commands', icon: '⚡', label: 'Commands', section: 'main' },
+                { id: 'terminal', icon: '🖥️', label: 'Terminal', section: 'main' },
+                { id: 'projects', icon: '📁', label: 'Projects', section: 'workspace' },
+                { id: 'files', icon: '📄', label: 'Files', section: 'workspace' },
+                { id: 'browse', icon: '🌐', label: 'Web Browse', section: 'tools' },
+                { id: 'test', icon: '🧪', label: 'Testing', section: 'tools' },
+                { id: 'security', icon: '🔒', label: 'Security', section: 'tools' },
+                { id: 'database', icon: '🗄️', label: 'Database', section: 'tools' },
+                { id: 'docs', icon: '📚', label: 'Documentation', section: 'tools' },
+            ];
+            
+            const commands = [
+                { name: 'Requirements', icon: '📋', desc: 'Generate requirements', cmd: 'requirements' },
+                { name: 'Design', icon: '🎨', desc: 'Create system design', cmd: 'design' },
+                { name: 'Code', icon: '💻', desc: 'Generate code', cmd: 'code' },
+                { name: 'Test', icon: '🧪', desc: 'Create tests', cmd: 'test' },
+                { name: 'Security', icon: '🔒', desc: 'Security audit', cmd: 'security' },
+                { name: 'Documentation', icon: '📚', desc: 'Generate docs', cmd: 'docs' },
+                { name: 'DevOps', icon: '🚀', desc: 'CI/CD setup', cmd: 'devops' },
+                { name: 'Debug', icon: '🐛', desc: 'Debug code', cmd: 'debug' },
+            ];
+            
+            const providers = ['gemini', 'qwen3', 'gpt-4'];
+            
+            const renderContent = () => {
+                switch(activeView) {
+                    case 'chat':
+                        return (
+                            <div className="chat-container">
+                                <div className="chat-header">
+                                    <h3>AI Assistant</h3>
+                                    <div className="provider-selector">
+                                        <span>Provider:</span>
+                                        {providers.map(p => (
+                                            <div 
+                                                key={p}
+                                                className={`provider-chip ${provider === p ? 'active' : ''}`}
+                                                onClick={() => setProvider(p)}
+                                            >
+                                                {p.toUpperCase()}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                
+                                <div className="chat-messages">
+                                    {messages.map((msg, index) => (
+                                        <div key={index} className="message">
+                                            <div className={`message-avatar ${msg.type}-avatar`}>
+                                                {msg.type === 'user' ? 'U' : 'AI'}
+                                            </div>
+                                            <div className="message-content">
+                                                {msg.content}
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {isLoading && <div className="spinner"></div>}
+                                    <div ref={messagesEndRef} />
+                                </div>
+                                
+                                <div className="chat-input-container">
+                                    <div className="chat-input-wrapper">
+                                        <textarea
+                                            className="chat-input"
+                                            value={inputValue}
+                                            onChange={(e) => setInputValue(e.target.value)}
+                                            onKeyPress={(e) => {
+                                                if (e.key === 'Enter' && !e.shiftKey) {
+                                                    e.preventDefault();
+                                                    sendMessage();
+                                                }
+                                            }}
+                                            placeholder="Type your message... (@ to reference files)"
+                                        />
+                                        <div className="input-actions">
+                                            <button className="action-btn">
+                                                📎
+                                            </button>
+                                            <button className="action-btn">
+                                                🖼️
+                                            </button>
+                                            <button 
+                                                className="action-btn send-btn"
+                                                onClick={sendMessage}
+                                            >
+                                                ➤
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    
+                    case 'commands':
+                        return (
+                            <div className="command-palette">
+                                <h2>Quick Commands</h2>
+                                <div className="command-grid">
+                                    {commands.map(cmd => (
+                                        <div 
+                                            key={cmd.cmd}
+                                            className="command-card"
+                                            onClick={() => executeCommand(cmd.cmd)}
+                                        >
+                                            <div className="command-icon">{cmd.icon}</div>
+                                            <div className="command-name">{cmd.name}</div>
+                                            <div className="command-desc">{cmd.desc}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    
+                    case 'terminal':
+                        return (
+                            <div className="terminal-container">
+                                <div className="terminal-line">
+                                    <span className="terminal-prompt">$</span>
+                                    <input 
+                                        className="terminal-input"
+                                        placeholder="Enter command..."
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter') {
+                                                socket?.emit('execute_interactive', {
+                                                    command: e.target.value
+                                                });
+                                                e.target.value = '';
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        );
+                    
+                    default:
+                        return <div>View: {activeView}</div>;
+                }
+            };
+            
+            return (
+                <div className="app-container">
+                    <div className="sidebar">
+                        <div className="logo">
+                            <div className="logo-icon">C</div>
+                            <div className="logo-text">CodeObit</div>
+                        </div>
+                        
+                        {['main', 'workspace', 'tools'].map(section => (
+                            <div key={section} className="menu-section">
+                                <div className="menu-title">{section}</div>
+                                {menuItems
+                                    .filter(item => item.section === section)
+                                    .map(item => (
+                                        <div 
+                                            key={item.id}
+                                            className={`menu-item ${activeView === item.id ? 'active' : ''}`}
+                                            onClick={() => setActiveView(item.id)}
+                                        >
+                                            <span className="menu-icon">{item.icon}</span>
+                                            <span>{item.label}</span>
+                                        </div>
+                                    ))
+                                }
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <div className="main-content">
+                        <div className="header">
+                            <h1 className="header-title">
+                                {menuItems.find(item => item.id === activeView)?.label || 'CodeObit'}
+                            </h1>
+                            <div className="header-actions">
+                                <button className="btn btn-secondary">
+                                    <span>⚙️</span> Settings
+                                </button>
+                                <button className="btn btn-primary">
+                                    <span>🚀</span> New Project
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div className="content-area">
+                            {renderContent()}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Render the app
+        ReactDOM.render(<CodeObitUI />, document.getElementById('root'));
+    </script>
+</body>
+</html>
