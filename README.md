@@ -30,6 +30,7 @@ CodeObit CLI is a revolutionary AI-powered development environment that transfor
 - **Smart Auto-save**: Never lose your work with intelligent version control
 - **Web Integration**: Automatically browse and summarize web resources
 - **Cross-Platform**: Works on Windows, macOS, and Linux
+- **🆕 Web UI**: Modern web-based interface alongside the CLI
 
 ## ✨ Features
 
@@ -140,6 +141,52 @@ Experience "vibe coding" with:
 - **🐛 Advanced Debugging** - AI-powered error analysis
 - **📊 Usage Tracking** - Monitor tokens and project status
 - **🔀 Project Switching** - Seamlessly switch between multiple projects
+
+## 🌐 Web UI Interface
+
+### 🎨 Modern Web-Based Interface
+
+CodeObit now includes a beautiful web-based UI that complements the CLI experience:
+
+<img src="https://raw.githubusercontent.com/shalinda-j/CodeObit/main/assets/ui-screenshot.png" alt="CodeObit UI" width="800">
+
+#### Features:
+- **Real-time Chat Interface**: Interactive AI conversations with syntax highlighting
+- **Command Palette**: Visual access to all CLI commands
+- **Integrated Terminal**: Execute commands directly from the browser
+- **Project Management**: Browse and manage projects visually
+- **File Explorer**: Navigate and edit files with ease
+- **WebSocket Support**: Real-time command output streaming
+- **Multi-Provider Support**: Switch between AI providers on the fly
+- **Responsive Design**: Works on desktop, tablet, and mobile
+
+### 🚀 Starting the Web UI
+
+#### On Linux/macOS:
+```bash
+./run_ui.sh
+```
+
+#### On Windows:
+```batch
+run_ui.bat
+```
+
+#### Manual Start:
+```bash
+python ui_app.py
+```
+
+The UI will be available at: **http://localhost:5000**
+
+### 🔧 UI Configuration
+
+The web UI can be configured through environment variables:
+
+```bash
+export PORT=5000           # Change the port
+export DEBUG=True          # Enable debug mode
+```
 
 ## 🚀 Quick Start
 
