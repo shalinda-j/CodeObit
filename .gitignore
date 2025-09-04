@@ -181,6 +181,7 @@ cython_debug/
 
 # CodeObit specific
 .codeobit/
+config/config.yaml
 project_data.json
 ai_engineer.log
 *.backup

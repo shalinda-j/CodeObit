@@ -7,8 +7,12 @@ import logging
 import os
 from typing import Optional, Dict, Any
 
-from google import genai
-from google.genai import types
+try:
+    from google import genai  # type: ignore
+    from google.genai import types  # type: ignore
+except Exception:  # google-genai might not be installed if using non-Gemini providers
+    genai = None
+    types = None
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -81,29 +85,45 @@ class GeminiClient:
         """
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
-            raise ValueError("Gemini API key is required. Set GEMINI_API_KEY environment variable or pass api_key parameter.")
+            # Do not force error here; multi-provider may be configured and used instead
+            logger.warning("Gemini API key not set. If Gemini provider is selected, set GEMINI_API_KEY.")
         
         try:
-            self.client = genai.Client(api_key=self.api_key)
+            self.client = genai.Client(api_key=self.api_key) if genai and self.api_key else None
             self.default_model = "gemini-2.5-flash"
             self.pro_model = "gemini-2.5-pro"
         except Exception as e:
             logger.error(f"Failed to initialize Gemini client: {e}")
-            raise
+            self.client = None
+            self.default_model = "gemini-2.5-flash"
+            self.pro_model = "gemini-2.5-pro"
     
     def test_connection(self) -> bool:
         """
-        Test the connection to Gemini API
+        Test the connection to Gemini API or active provider
         
         Returns:
             bool: True if connection successful, False otherwise
         """
+        # Prefer testing active provider if configured
         try:
+            from cli.ai.multi_provider import get_provider_manager
+            manager = get_provider_manager()
+            provider = manager.get_current_provider()
+            if provider:
+                return provider.test_connection()
+        except Exception as e:
+            logger.debug(f"Provider manager test skipped or unavailable: {e}")
+        
+        # Fallback to direct Gemini test
+        try:
+            if not self.client:
+                return False
             response = self.client.models.generate_content(
                 model=self.default_model,
                 contents="Hello, test connection"
             )
-            return response.text is not None
+            return bool(getattr(response, "text", None))
         except Exception as e:
             logger.error(f"Connection test failed: {e}")
             return False
@@ -112,7 +132,7 @@ class GeminiClient:
                         system_instruction: Optional[str] = None,
                         temperature: float = 0.7) -> str:
         """
-        Generate content using Gemini AI
+        Generate content using active provider if available; otherwise use Gemini
         
         Args:
             prompt: The input prompt
@@ -126,9 +146,29 @@ class GeminiClient:
         Raises:
             Exception: If content generation fails
         """
+        # Try multi-provider first
         try:
+            from cli.ai.multi_provider import get_provider_manager
+            manager = get_provider_manager()
+            provider = manager.get_current_provider()
+            if provider:
+                # If provider is Gemini and we have a Gemini client, prefer native client
+                if provider.__class__.__name__.lower().startswith("gemini") and self.client:
+                    # Fall through to Gemini path below
+                    pass
+                else:
+                    return provider.generate_content(prompt, system_instruction, temperature)
+        except Exception as e:
+            logger.debug(f"Provider manager generate skipped or unavailable: {e}")
+        
+        # Fallback to Gemini path
+        try:
+            if not self.client:
+                raise ValueError("Gemini client is not available. Configure an AI provider or install google-genai and set GEMINI_API_KEY.")
             model_name = model or self.default_model
             
+            if types is None:
+                raise RuntimeError("google-genai types not available. Install google-genai for Gemini provider support.")
             config = types.GenerateContentConfig(
                 temperature=temperature
             )
@@ -142,7 +182,7 @@ class GeminiClient:
                 config=config
             )
             
-            if response.text:
+            if getattr(response, "text", None):
                 return response.text
             else:
                 logger.warning("Empty response from Gemini API")

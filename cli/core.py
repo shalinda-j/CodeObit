@@ -11,6 +11,7 @@ from rich.table import Table
 from rich.panel import Panel
 
 from cli.utils.config import ConfigManager
+from cli import __version__
 from cli.commands.requirements import RequirementsCommand
 from cli.commands.design import DesignCommand
 from cli.commands.code import CodeCommand
@@ -48,14 +49,14 @@ class AISoftwareEngineerCLI:
     def create_parser(self):
         """Create the argument parser with all commands"""
         parser = argparse.ArgumentParser(
-            description="AI Software Engineer CLI - Comprehensive AI-powered software engineering workflows",
-            prog="ai-engineer"
+            description="CodeObit CLI - AI-Powered Interactive Development Environment",
+            prog="codeobit"
         )
         
         parser.add_argument(
             '--version', 
             action='version', 
-            version='AI Software Engineer CLI v1.0.0'
+            version=f'CodeObit CLI v{__version__}'
         )
         
         parser.add_argument(
