@@ -7,10 +7,10 @@
 
 **Transform your development workflow with intelligent AI assistance**
 
-[![Version](https://img.shields.io/badge/version-1.0.0--beta-blue?style=for-the-badge)](https://github.com/shalinda-j/CodeObit/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge)](https://github.com/shalinda-j/CodeObit/releases)
 [![Python](https://img.shields.io/badge/python-3.11+-blue?style=for-the-badge&logo=python)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
-[![Status](https://img.shields.io/badge/status-Public%20Beta-orange?style=for-the-badge)](https://github.com/shalinda-j/CodeObit)
+[![Status](https://img.shields.io/badge/status-Stable-success?style=for-the-badge)](https://github.com/shalinda-j/CodeObit)
 
 [🚀 Get Started](#-installation) • [📖 Documentation](#-features) • [💬 Community](https://github.com/shalinda-j/CodeObit/discussions) • [🐛 Report Bug](https://github.com/shalinda-j/CodeObit/issues)
 

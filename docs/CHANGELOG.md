@@ -112,3 +112,21 @@ We welcome your feedback on this beta release! Please:
 ---
 
 **Thank you for being part of the codeobit beta! 🎯⚡️**
+
+## [1.0.0] - 2025-08-14
+
+### ✅ Stable Release
+
+#### Added
+- Autopilot command: non-interactive generate → test → fix loop, with optional git commit and branch switching
+
+#### Changed
+- Bumped version to 1.0.0 and updated classifiers to Production/Stable
+- README badges updated to Stable
+
+#### Fixed
+- Minor CLI robustness improvements for provider and help flows
+
+#### Notes
+- Default provider remains Gemini; interactive multi-provider setup still supported
+- Backwards compatible with 1.0.0-beta commands
